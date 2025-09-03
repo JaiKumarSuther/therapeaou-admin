@@ -252,7 +252,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 value={editForm.status}
                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'Unrestricted' | 'Restricted' })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
-                style={{ ['--ring-color' as any]: COLORS.PRIMARY.BLUE }}
+                style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               >
                 <option value="Unrestricted">Unrestricted</option>
                 <option value="Restricted">Restricted</option>

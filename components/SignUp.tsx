@@ -96,7 +96,7 @@ export default function SignUp({ onBackToLogin }: SignUpProps) {
               value={formData.firstName}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[--ring-color] focus:border-[--ring-color]"
-              style={{ ['--ring-color' as any]: COLORS.PRIMARY.BLUE }}
+              style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               placeholder="First name"
               required
             />
@@ -112,7 +112,7 @@ export default function SignUp({ onBackToLogin }: SignUpProps) {
               value={formData.lastName}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[--ring-color] focus:border-[--ring-color]"
-              style={{ ['--ring-color' as any]: COLORS.PRIMARY.BLUE }}
+              style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               placeholder="Last name"
               required
             />
@@ -131,7 +131,7 @@ export default function SignUp({ onBackToLogin }: SignUpProps) {
             value={formData.email}
             onChange={handleInputChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[--ring-color] focus:border-[--ring-color]"
-            style={{ ['--ring-color' as any]: COLORS.PRIMARY.BLUE }}
+            style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
             placeholder="Enter your email"
             required
           />
@@ -150,7 +150,7 @@ export default function SignUp({ onBackToLogin }: SignUpProps) {
               value={formData.password}
               onChange={handleInputChange}
               className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[--ring-color] focus:border-[--ring-color]"
-              style={{ ['--ring-color' as any]: COLORS.PRIMARY.BLUE }}
+              style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               placeholder="Create a password"
               required
             />
@@ -181,7 +181,7 @@ export default function SignUp({ onBackToLogin }: SignUpProps) {
               value={formData.confirmPassword}
               onChange={handleInputChange}
               className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[--ring-color] focus:border-[--ring-color]"
-              style={{ ['--ring-color' as any]: COLORS.PRIMARY.BLUE }}
+              style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               placeholder="Confirm your password"
               required
             />

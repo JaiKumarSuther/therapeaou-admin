@@ -100,7 +100,7 @@ const Settings: React.FC = () => {
           value={profileData.timezone}
           onChange={(e) => setProfileData({ ...profileData, timezone: e.target.value })}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
-          style={{ ['--ring-color' as any]: COLORS.PRIMARY.LIGHT_BLUE }}
+          style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}
         >
           <option value="UTC-5 (Eastern Time)">UTC-5 (Eastern Time)</option>
           <option value="UTC-6 (Central Time)">UTC-6 (Central Time)</option>
@@ -192,7 +192,7 @@ const Settings: React.FC = () => {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Language
         </label>
-        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ ['--ring-color' as any]: COLORS.PRIMARY.LIGHT_BLUE }}>
+        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}>
           <option value="en">English</option>
           <option value="es">Spanish</option>
           <option value="fr">French</option>
@@ -203,7 +203,7 @@ const Settings: React.FC = () => {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Theme
         </label>
-        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ ['--ring-color' as any]: COLORS.PRIMARY.LIGHT_BLUE }}>
+        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
           <option value="auto">Auto</option>
@@ -213,7 +213,7 @@ const Settings: React.FC = () => {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Date Format
         </label>
-        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ ['--ring-color' as any]: COLORS.PRIMARY.LIGHT_BLUE }}>
+        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}>
           <option value="MM/DD/YYYY">MM/DD/YYYY</option>
           <option value="DD/MM/YYYY">DD/MM/YYYY</option>
           <option value="YYYY-MM-DD">YYYY-MM-DD</option>

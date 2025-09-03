@@ -44,8 +44,8 @@ const Button: React.FC<ButtonProps> = ({
     if (variant === 'primary') {
       return {
         backgroundColor: COLORS.PRIMARY.BLUE,
-        ['--ring-color' as any]: COLORS.PRIMARY.BLUE,
-      };
+        ['--ring-color']: COLORS.PRIMARY.BLUE,
+      } as React.CSSProperties;
     }
     return {};
   };

@@ -77,7 +77,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             required={required}
             placeholder={placeholder}
             className={`${baseClasses} ${stateClasses} ${iconClasses}`}
-            style={{ ['--ring-color' as any]: COLORS.PRIMARY.BLUE }}
+            style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
           />
           {icon && iconPosition === 'right' && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

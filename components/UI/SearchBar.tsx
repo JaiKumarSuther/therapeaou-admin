@@ -22,7 +22,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, placeholder = 'S
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{ ['--ring-color' as any]: COLORS.PRIMARY.LIGHT_BLUE }}
+        style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}
       />
     </div>
   );
