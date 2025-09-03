@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shieldr - Login",
-  description: "Stay Connected. Stay Protected. Login to your Shieldr account.",
+  title: "Therapeaou - Login",
+  description: "Stay Connected. Stay Protected. Login to your Therapeaou account.",
 };
 
 export default function RootLayout({

@@ -1,4 +1,4 @@
-# Shieldr Admin Dashboard
+# Therapeaou Admin Dashboard
 
 A modern, professional admin dashboard built with Next.js, TypeScript, and Tailwind CSS.
 
@@ -104,7 +104,7 @@ npm start
 Create a `.env.local` file in the root directory:
 
 ```env
-NEXT_PUBLIC_APP_NAME=Shieldr Admin
+NEXT_PUBLIC_APP_NAME=Therapeaou Admin
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
 ```
 
@@ -210,7 +210,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-For support, email support@shieldr.com or create an issue in the repository.
+For support, email support@Therapeaou.com or create an issue in the repository.
 
 ## 🔄 Changelog
 

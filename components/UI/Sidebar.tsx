@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeNav, onNavChange }) => {
       <div className="mb-8">
         <Image
           src="/assets/logo.png"
-          alt="Shieldr Logo"
+          alt="Therapeaou Logo"
           width={160}
           height={64}
           className="mx-auto"

@@ -42,7 +42,7 @@ export default function LoginPage() {
         <div className="text-center mb-6 sm:mb-8">
           <Image
             src="/assets/logo.png"
-            alt="Shieldr Logo"
+            alt="Therapeaou Logo"
             width={200}
             height={80}
             className="mx-auto"

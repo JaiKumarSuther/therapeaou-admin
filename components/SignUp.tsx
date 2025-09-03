@@ -55,7 +55,7 @@ export default function SignUp({ onBackToLogin }: SignUpProps) {
             Account Created!
           </h2>
           <p className="text-gray-600 text-sm mb-6">
-            Welcome to Shieldr! Your account has been successfully created.
+            Welcome to Therapeaou! Your account has been successfully created.
           </p>
           <button
             onClick={onBackToLogin}
@@ -78,7 +78,7 @@ export default function SignUp({ onBackToLogin }: SignUpProps) {
           Create Account
         </h2>
         <p className="text-gray-600 text-sm">
-          Join Shieldr and stay protected
+          Join Therapeaou and stay protected
         </p>
       </div>
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Shieldr - Admin Dashboard",
-  description: "Shieldr Admin Dashboard - Stay Connected. Stay Protected.",
+  title: "Therapeaou - Admin Dashboard",
+  description: "Therapeaou Admin Dashboard - Stay Connected. Stay Protected.",
 };
 
 export default function DashboardLayout({
