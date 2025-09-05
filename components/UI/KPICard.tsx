@@ -11,6 +11,7 @@ interface KPICardProps {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
+  onClick?: () => void;
 }
 
 const KPICard: React.FC<KPICardProps> = ({
@@ -20,10 +21,22 @@ const KPICard: React.FC<KPICardProps> = ({
   trendType,
   icon: Icon,
   iconBg,
-  iconColor
+  iconColor,
+  onClick
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200">
+    <div
+      className={`bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200 ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-sm sm:text-base font-medium text-gray-600 truncate">

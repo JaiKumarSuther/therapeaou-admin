@@ -1,10 +1,16 @@
 // User related types
+export type UserRole = 'Therapist' | 'Patient' | 'Admin';
+
+export type UserStatus = 'Active' | 'Restricted' | 'Pending Verification';
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   initials: string;
+  phone?: string;
+  location?: string;
 }
 
 export interface UserTableData {
@@ -12,7 +18,17 @@ export interface UserTableData {
   name: string;
   email: string;
   lastLogin: string;
-  status: 'Unrestricted' | 'Restricted';
+  status: 'Unrestricted' | 'Restricted' | 'Pending Verification';
+  role?: UserRole;
+  location?: string;
+  phone?: string;
+  verificationStatus?: 'Verified' | 'Pending' | 'Rejected';
+  rating?: number; // average rating for therapists
+  reviewsCount?: number;
+  activity?: {
+    bookings?: number;
+    cancellations?: number;
+  };
 }
 
 // Authentication types
@@ -42,7 +58,9 @@ export interface SignUpFormData {
 export interface EditUserFormData {
   name: string;
   email: string;
-  status: 'Unrestricted' | 'Restricted';
+  status: 'Unrestricted' | 'Restricted' | 'Pending Verification';
+  role?: UserRole;
+  location?: string;
 }
 
 // KPI and Report types
@@ -54,6 +72,7 @@ export interface KPIData {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
+  onClickPath?: string;
 }
 
 export interface ReportData {
@@ -62,6 +81,51 @@ export interface ReportData {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
+  type?: 'therapist' | 'patient' | 'financial' | 'user' | 'status';
+}
+
+// Activity & Reporting models
+export type ActivityType =
+  | 'registration'
+  | 'therapist_verification'
+  | 'restriction_change'
+  | 'payment'
+  | 'dispute';
+
+export interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  description: string;
+  createdAt: string;
+  actor?: string; // admin user or system
+  meta?: Record<string, string | number | boolean>;
+}
+
+export interface ReportHistoryItem {
+  id: string;
+  type: 'Therapist Activity' | 'Patient Activity' | 'Financial Activity' | 'User Activity';
+  createdAt: string;
+  createdBy: string; // admin name
+  fileUrl?: string;
+}
+
+export interface TherapistMetrics {
+  sessionsCompleted: number;
+  cancellations: number;
+  averageRating: number;
+}
+
+export interface PatientMetrics {
+  bookings: number;
+  cancellations: number;
+  reviews: number;
+}
+
+export interface FinancialMetrics {
+  payments: number;
+  refunds: number;
+  commission: number;
+  revenue: number;
 }
 
 // Navigation types

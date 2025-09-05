@@ -1,31 +1,40 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FiEye, FiEdit } from 'react-icons/fi';
+import { FiEye, FiEdit, FiUserCheck, FiMail, FiSlash, FiRotateCcw } from 'react-icons/fi';
 import { UserTableData, EditUserFormData } from '@/types';
 import { COLORS } from '@/constants';
 import Modal from './Modal';
 import Button from './Button';
 import Input from './Input';
+import { useRouter } from 'next/navigation';
 
 interface UserTableProps {
   users: UserTableData[];
-  onAction: (userId: string) => void;
+  onAction: (userId: string, action?: string) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   const [selectedUser, setSelectedUser] = useState<UserTableData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageSubject, setMessageSubject] = useState('');
+  const [messageBody, setMessageBody] = useState('');
   const [editForm, setEditForm] = useState<EditUserFormData>({
     name: '',
     email: '',
     status: 'Unrestricted',
+    role: 'Patient',
+    location: ''
   });
+  const router = useRouter();
 
   const handleViewDetails = (user: UserTableData) => {
-    setSelectedUser(user);
-    setShowDetails(true);
+    router.push(`/dashboard/user-management/${encodeURIComponent(user.id)}`);
   };
 
   const handleEditUser = (user: UserTableData) => {
@@ -34,6 +43,8 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
       name: user.name,
       email: user.email,
       status: user.status,
+      role: user.role || 'Patient',
+      location: user.location || ''
     });
     setShowEditModal(true);
   };
@@ -41,22 +52,41 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   const handleSaveEdit = () => {
     if (selectedUser) {
       console.log('Saving user:', selectedUser.id, editForm);
-      onAction(selectedUser.id);
+      onAction(selectedUser.id, 'save');
       setShowEditModal(false);
       setSelectedUser(null);
     }
   };
 
+  const handleSuspend = (user: UserTableData) => {
+    setSelectedUser(user);
+    setShowSuspendModal(true);
+  };
+
+  const handleResetPassword = (user: UserTableData) => {
+    setSelectedUser(user);
+    setShowResetModal(true);
+  };
+
+  const handleVerifyTherapist = (user: UserTableData) => {
+    setSelectedUser(user);
+    setShowVerifyModal(true);
+  };
+
   const closeModal = () => {
     setShowDetails(false);
     setShowEditModal(false);
+    setShowSuspendModal(false);
+    setShowResetModal(false);
+    setShowVerifyModal(false);
+    setShowMessageModal(false);
     setSelectedUser(null);
   };
 
-  const getStatusClasses = (status: 'Unrestricted' | 'Restricted') => {
-    return status === 'Unrestricted'
-      ? `${COLORS.STATUS.UNRESTRICTED.BG} ${COLORS.STATUS.UNRESTRICTED.TEXT}`
-      : `${COLORS.STATUS.RESTRICTED.BG} ${COLORS.STATUS.RESTRICTED.TEXT}`;
+  const getStatusClasses = (status: 'Unrestricted' | 'Restricted' | 'Pending Verification') => {
+    if (status === 'Unrestricted') return `${COLORS.STATUS.UNRESTRICTED.BG} ${COLORS.STATUS.UNRESTRICTED.TEXT}`;
+    if (status === 'Restricted') return `${COLORS.STATUS.RESTRICTED.BG} ${COLORS.STATUS.RESTRICTED.TEXT}`;
+    return `${COLORS.STATUS.PENDING.BG} ${COLORS.STATUS.PENDING.TEXT}`;
   };
 
   return (
@@ -70,24 +100,6 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 <h3 className="text-sm font-medium text-gray-900 truncate">{user.name}</h3>
                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleViewDetails(user)}
-                  className="p-2 rounded-md transition-colors cursor-pointer text-[#3C5671] hover:opacity-80 hover:bg-[#3C5671]/10"
-                  title="View Details"
-                  aria-label="View user details"
-                >
-                  <FiEye className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleEditUser(user)}
-                  className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors cursor-pointer"
-                  title="Edit User"
-                  aria-label="Edit user"
-                >
-                  <FiEdit className="w-4 h-4" />
-                </button>
-              </div>
             </div>
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
@@ -98,6 +110,64 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 <span className="text-gray-500">Last Login:</span>
                 <span className="ml-1 font-medium text-gray-900">{user.lastLogin}</span>
               </div>
+              <div>
+                <span className="text-gray-500">Role:</span>
+                <span className="ml-1 font-medium text-gray-900">{user.role || '—'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Location:</span>
+                <span className="ml-1 font-medium text-gray-900">{user.location || '—'}</span>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => router.push(`/dashboard/user-management/${encodeURIComponent(user.id)}`)}
+                className="p-2 rounded-md transition-colors cursor-pointer text-[#3C5671] hover:opacity-80 hover:bg-[#3C5671]/10"
+                title="View Details"
+                aria-label="View user details"
+              >
+                <FiEye className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleEditUser(user)}
+                className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors cursor-pointer"
+                title="Edit User"
+                aria-label="Edit user"
+              >
+                <FiEdit className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleSuspend(user)}
+                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                title="Suspend/Ban"
+                aria-label="Suspend/Ban user"
+              >
+                <FiSlash className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleResetPassword(user)}
+                className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-md transition-colors cursor-pointer"
+                title="Reset Password"
+                aria-label="Reset password"
+              >
+                <FiRotateCcw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleVerifyTherapist(user)}
+                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                title="Verify Therapist"
+                aria-label="Verify therapist"
+              >
+                <FiUserCheck className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => { setSelectedUser(user); setShowMessageModal(true); }}
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
+                title="Send Message"
+                aria-label="Send message"
+              >
+                <FiMail className="w-4 h-4" />
+              </button>
             </div>
             <div className="mt-3">
               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(user.status)}`}>
@@ -123,6 +193,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 Email
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Location
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Last Login
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -146,6 +222,12 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                   {user.email}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {user.role || '—'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {user.location || '—'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {user.lastLogin}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -156,7 +238,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleViewDetails(user)}
+                      onClick={() => router.push(`/dashboard/user-management/${encodeURIComponent(user.id)}`)}
                       className="p-2 rounded-md transition-colors cursor-pointer text-[#3C5671] hover:opacity-80 hover:bg-[#3C5671]/10"
                       title="View Details"
                       aria-label="View user details"
@@ -171,6 +253,38 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                     >
                       <FiEdit className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={() => handleSuspend(user)}
+                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                      title="Suspend/Ban"
+                      aria-label="Suspend/Ban user"
+                    >
+                      <FiSlash className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleResetPassword(user)}
+                      className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-md transition-colors cursor-pointer"
+                      title="Reset Password"
+                      aria-label="Reset password"
+                    >
+                      <FiRotateCcw className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleVerifyTherapist(user)}
+                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                      title="Verify Therapist"
+                      aria-label="Verify therapist"
+                    >
+                      <FiUserCheck className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => { setSelectedUser(user); setShowMessageModal(true); }}
+                      className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
+                      title="Send Message"
+                      aria-label="Send message"
+                    >
+                      <FiMail className="w-4 h-4" />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -179,44 +293,6 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
         </table>
       </div>
 
-      {/* User Details Modal */}
-      <Modal
-        isOpen={showDetails}
-        onClose={closeModal}
-        title="User Details"
-      >
-        {selectedUser && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">User ID</label>
-              <p className="mt-1 text-sm text-gray-900">{selectedUser.id}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
-              <p className="mt-1 text-sm text-gray-900">{selectedUser.name}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <p className="mt-1 text-sm text-gray-900">{selectedUser.email}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Last Login</label>
-              <p className="mt-1 text-sm text-gray-900">{selectedUser.lastLogin}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Status</label>
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getStatusClasses(selectedUser.status)}`}>
-                {selectedUser.status}
-              </span>
-            </div>
-            <div className="flex justify-end pt-4">
-              <Button variant="secondary" onClick={closeModal}>
-                Close
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
 
       {/* Edit User Modal */}
       <Modal
@@ -244,18 +320,39 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
               placeholder="Enter email address"
             />
             <div>
+              <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700">
+                Role
+              </label>
+              <select
+                id="edit-role"
+                value={editForm.role}
+                onChange={(e) => setEditForm({ ...editForm, role: e.target.value as any })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+              >
+                <option>Therapist</option>
+                <option>Patient</option>
+              </select>
+            </div>
+            <Input
+              label="Location"
+              value={editForm.location || ''}
+              onChange={(value) => setEditForm({ ...editForm, location: value })}
+              placeholder="Enter location"
+            />
+            <div>
               <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700">
                 Status
               </label>
               <select
                 id="edit-status"
                 value={editForm.status}
-                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'Unrestricted' | 'Restricted' })}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
                 style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               >
                 <option value="Unrestricted">Unrestricted</option>
                 <option value="Restricted">Restricted</option>
+                <option value="Pending Verification">Pending Verification</option>
               </select>
             </div>
             <div className="flex justify-end space-x-3 pt-4">
@@ -265,6 +362,72 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
               <Button onClick={handleSaveEdit}>
                 Save Changes
               </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Suspend/Ban Modal */}
+      <Modal isOpen={showSuspendModal} onClose={closeModal} title="Suspend User">
+        {selectedUser && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-700">Are you sure you want to suspend/ban <span className="font-semibold">{selectedUser.name}</span> ({selectedUser.email})?</p>
+            <div className="flex justify-end space-x-3">
+              <Button variant="secondary" onClick={closeModal}>Cancel</Button>
+              <Button onClick={() => { onAction(selectedUser.id, 'suspend'); closeModal(); }}>Confirm</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Reset Password Modal */}
+      <Modal isOpen={showResetModal} onClose={closeModal} title="Reset Password">
+        {selectedUser && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-700">Send a password reset link to <span className="font-semibold">{selectedUser.email}</span>?</p>
+            <div className="flex justify-end space-x-3">
+              <Button variant="secondary" onClick={closeModal}>Cancel</Button>
+              <Button onClick={() => { onAction(selectedUser.id, 'reset_password'); closeModal(); }}>Send Link</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Verify Therapist Modal */}
+      <Modal isOpen={showVerifyModal} onClose={closeModal} title="Verify Therapist">
+        {selectedUser && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-700">Approve verification for <span className="font-semibold">{selectedUser.name}</span>?</p>
+            <div className="flex justify-end space-x-3">
+              <Button variant="secondary" onClick={closeModal}>Cancel</Button>
+              <Button onClick={() => { onAction(selectedUser.id, 'verify_therapist'); closeModal(); }}>Verify</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Send Message Modal */}
+      <Modal isOpen={showMessageModal} onClose={closeModal} title="Send Message">
+        {selectedUser && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">To</label>
+              <p className="mt-1 text-sm text-gray-900">{selectedUser.name} ({selectedUser.email})</p>
+            </div>
+            <Input label="Subject" value={messageSubject} onChange={setMessageSubject} placeholder="Subject" />
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Message</label>
+              <textarea
+                value={messageBody}
+                onChange={(e) => setMessageBody(e.target.value)}
+                rows={6}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+                placeholder="Write your message..."
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <Button variant="secondary" onClick={closeModal}>Cancel</Button>
+              <Button onClick={() => { onAction(selectedUser.id, 'message'); closeModal(); }}>Send</Button>
             </div>
           </div>
         )}

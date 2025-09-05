@@ -24,6 +24,10 @@ export const COLORS = {
       BG: 'bg-red-100',
       TEXT: 'text-red-800',
     },
+    PENDING: {
+      BG: 'bg-yellow-100',
+      TEXT: 'text-yellow-800',
+    },
   },
   TEXT: {
     PRIMARY: '#1E293B', // Dark slate for primary text

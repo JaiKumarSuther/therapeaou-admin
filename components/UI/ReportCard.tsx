@@ -38,7 +38,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
         </div>
       </div>
       <div className="mb-4 sm:mb-6">
-        <p className="text-2xl sm:text-3xl font-bold text-gray-900">{value}</p>
+        <p className="text-lg sm:text-xl font-semibold text-gray-900 leading-6 sm:leading-7">{value}</p>
       </div>
       <button
         onClick={handleDownload}
