@@ -16,7 +16,7 @@ interface UserTableProps {
 
 const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   const [selectedUser, setSelectedUser] = useState<UserTableData | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
+  // const [showDetails, setShowDetails] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuspendModal, setShowSuspendModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -33,9 +33,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   });
   const router = useRouter();
 
-  const handleViewDetails = (user: UserTableData) => {
-    router.push(`/dashboard/user-management/${encodeURIComponent(user.id)}`);
-  };
+
 
   const handleEditUser = (user: UserTableData) => {
     setSelectedUser(user);
@@ -74,7 +72,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   };
 
   const closeModal = () => {
-    setShowDetails(false);
+    // setShowDetails(false);
     setShowEditModal(false);
     setShowSuspendModal(false);
     setShowResetModal(false);
@@ -326,7 +324,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
               <select
                 id="edit-role"
                 value={editForm.role}
-                onChange={(e) => setEditForm({ ...editForm, role: e.target.value as any })}
+                onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'Therapist' | 'Patient' })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
               >
                 <option>Therapist</option>
@@ -346,7 +344,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
               <select
                 id="edit-status"
                 value={editForm.status}
-                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'Unrestricted' | 'Restricted' | 'Pending Verification' })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
                 style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               >

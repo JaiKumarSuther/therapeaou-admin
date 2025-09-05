@@ -81,7 +81,7 @@ const Reporting: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
                 <Dropdown
                   value={roleFilter}
-                  onChange={(v) => setRoleFilter(v as any)}
+                  onChange={(v) => setRoleFilter(v as 'All' | 'Therapist' | 'Patient')}
                   options={[
                     { label: 'All', value: 'All' },
                     { label: 'Therapist', value: 'Therapist' },
@@ -93,7 +93,7 @@ const Reporting: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                 <Dropdown
                   value={statusFilter}
-                  onChange={(v) => setStatusFilter(v as any)}
+                  onChange={(v) => setStatusFilter(v as 'All' | 'Active' | 'Restricted')}
                   options={[
                     { label: 'All', value: 'All' },
                     { label: 'Active', value: 'Active' },
@@ -105,7 +105,7 @@ const Reporting: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Location</label>
                 <Dropdown
                   value={locationFilter}
-                  onChange={(v) => setLocationFilter(v as any)}
+                  onChange={(v) => setLocationFilter(v as 'All' | 'Lagos' | 'Abuja' | 'Kano')}
                   options={[
                     { label: 'All', value: 'All' },
                     { label: 'Lagos', value: 'Lagos' },

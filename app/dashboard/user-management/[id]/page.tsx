@@ -4,7 +4,6 @@ import React, { useMemo, useState } from 'react';
 import { 
   User, 
   Mail, 
-  Phone, 
   MapPin, 
   Calendar, 
   Shield, 
@@ -70,7 +69,7 @@ const UserDetailsPage: React.FC = () => {
                   <User className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">User Not Found</h3>
-                <p className="text-gray-600 mb-6">The user you're looking for doesn't exist or has been removed.</p>
+                <p className="text-gray-600 mb-6">The user you&apos;re looking for doesn&apos;t exist or has been removed.</p>
                 <Button variant="secondary" onClick={() => router.back()}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Go Back

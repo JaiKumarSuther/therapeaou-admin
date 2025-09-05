@@ -9,7 +9,7 @@ import Dropdown from '../../../components/UI/Dropdown';
 import { UserTableData } from '@/types';
 import { USERS } from '@/data/users';
 import { COLORS } from '@/constants';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 const UserManagement: React.FC = () => {
   const [activeNav, setActiveNav] = useState('user-management');
@@ -20,7 +20,7 @@ const UserManagement: React.FC = () => {
   const [sortBy, setSortBy] = useState<'name' | 'lastLogin' | 'status'>('lastLogin');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const searchParams = useSearchParams();
-  const router = useRouter();
+  // router not used currently
 
   const mockUsers: UserTableData[] = USERS;
 
@@ -80,7 +80,7 @@ const UserManagement: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
                 <Dropdown
                   value={roleFilter}
-                  onChange={(v) => setRoleFilter(v as any)}
+                  onChange={(v) => setRoleFilter(v as 'All' | 'Therapist' | 'Patient')}
                   options={[
                     { label: 'All', value: 'All' },
                     { label: 'Therapist', value: 'Therapist' },
@@ -92,7 +92,7 @@ const UserManagement: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                 <Dropdown
                   value={statusFilter}
-                  onChange={(v) => setStatusFilter(v as any)}
+                  onChange={(v) => setStatusFilter(v as 'All' | 'Unrestricted' | 'Restricted' | 'Pending Verification')}
                   options={[
                     { label: 'All', value: 'All' },
                     { label: 'Unrestricted', value: 'Unrestricted' },
@@ -105,7 +105,7 @@ const UserManagement: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Location</label>
                 <Dropdown
                   value={locationFilter}
-                  onChange={(v) => setLocationFilter(v as any)}
+                  onChange={(v) => setLocationFilter(v as 'All' | 'Lagos' | 'Abuja' | 'Kano')}
                   options={[
                     { label: 'All', value: 'All' },
                     { label: 'Lagos', value: 'Lagos' },
@@ -118,7 +118,7 @@ const UserManagement: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Sort By</label>
                 <Dropdown
                   value={sortBy}
-                  onChange={(v) => setSortBy(v as any)}
+                  onChange={(v) => setSortBy(v as 'name' | 'lastLogin' | 'status')}
                   options={[
                     { label: 'Last Login', value: 'lastLogin' },
                     { label: 'Name', value: 'name' },
@@ -130,7 +130,7 @@ const UserManagement: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Direction</label>
                 <Dropdown
                   value={sortDir}
-                  onChange={(v) => setSortDir(v as any)}
+                  onChange={(v) => setSortDir(v as 'asc' | 'desc')}
                   options={[
                     { label: 'Desc', value: 'desc' },
                     { label: 'Asc', value: 'asc' },
