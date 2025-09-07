@@ -5,9 +5,10 @@ import Image from 'next/image';
 import LoginForm from '../components/LoginForm';
 import ForgotPassword from '../components/ForgotPassword';
 import SignUp from '../components/SignUp';
+import CreateAdminForm from '../components/CreateAdminForm';
 import { COLORS } from '@/constants';
 
-type ViewType = 'login' | 'forgot-password' | 'signup';
+type ViewType = 'login' | 'forgot-password' | 'signup' | 'create-admin';
 
 export default function LoginPage() {
   const [currentView, setCurrentView] = useState<ViewType>('login');
@@ -24,14 +25,24 @@ export default function LoginPage() {
     setCurrentView('login');
   };
 
+  const handleCreateAdmin = () => {
+    setCurrentView('create-admin');
+  };
+
+  const handleCreateAdminSuccess = () => {
+    setCurrentView('login');
+  };
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'forgot-password':
         return <ForgotPassword onBackToLogin={handleBackToLogin} />;
       case 'signup':
         return <SignUp onBackToLogin={handleBackToLogin} />;
+      case 'create-admin':
+        return <CreateAdminForm onSuccess={handleCreateAdminSuccess} onCancel={handleBackToLogin} />;
       default:
-        return <LoginForm onForgotPassword={handleForgotPassword} onSignUp={handleSignUp} />;
+        return <LoginForm onForgotPassword={handleForgotPassword} onSignUp={handleSignUp} onCreateAdmin={handleCreateAdmin} />;
     }
   };
 

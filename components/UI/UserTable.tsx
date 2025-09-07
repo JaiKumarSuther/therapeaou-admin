@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 interface UserTableProps {
   users: UserTableData[];
-  onAction: (userId: string, action?: string) => void;
+  onAction: (userId: string, action?: string, data?: any) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
@@ -27,7 +27,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   const [editForm, setEditForm] = useState<EditUserFormData>({
     name: '',
     email: '',
-    status: 'Unrestricted',
+    status: 'Active',
     role: 'Patient',
     location: ''
   });
@@ -50,7 +50,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   const handleSaveEdit = () => {
     if (selectedUser) {
       console.log('Saving user:', selectedUser.id, editForm);
-      onAction(selectedUser.id, 'save');
+      onAction(selectedUser.id, 'save', editForm);
       setShowEditModal(false);
       setSelectedUser(null);
     }
@@ -81,8 +81,8 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
     setSelectedUser(null);
   };
 
-  const getStatusClasses = (status: 'Unrestricted' | 'Restricted' | 'Pending Verification') => {
-    if (status === 'Unrestricted') return `${COLORS.STATUS.UNRESTRICTED.BG} ${COLORS.STATUS.UNRESTRICTED.TEXT}`;
+  const getStatusClasses = (status: 'Active' | 'Restricted' | 'Pending Verification') => {
+    if (status === 'Active') return `${COLORS.STATUS.UNRESTRICTED.BG} ${COLORS.STATUS.UNRESTRICTED.TEXT}`;
     if (status === 'Restricted') return `${COLORS.STATUS.RESTRICTED.BG} ${COLORS.STATUS.RESTRICTED.TEXT}`;
     return `${COLORS.STATUS.PENDING.BG} ${COLORS.STATUS.PENDING.TEXT}`;
   };
@@ -344,11 +344,11 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
               <select
                 id="edit-status"
                 value={editForm.status}
-                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'Unrestricted' | 'Restricted' | 'Pending Verification' })}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'Active' | 'Restricted' | 'Pending Verification' })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
                 style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               >
-                <option value="Unrestricted">Unrestricted</option>
+                <option value="Active">Active</option>
                 <option value="Restricted">Restricted</option>
                 <option value="Pending Verification">Pending Verification</option>
               </select>
@@ -385,7 +385,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
             <p className="text-sm text-gray-700">Send a password reset link to <span className="font-semibold">{selectedUser.email}</span>?</p>
             <div className="flex justify-end space-x-3">
               <Button variant="secondary" onClick={closeModal}>Cancel</Button>
-              <Button onClick={() => { onAction(selectedUser.id, 'reset_password'); closeModal(); }}>Send Link</Button>
+              <Button onClick={() => { onAction(selectedUser.id, 'reset-password'); closeModal(); }}>Send Link</Button>
             </div>
           </div>
         )}
@@ -398,7 +398,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
             <p className="text-sm text-gray-700">Approve verification for <span className="font-semibold">{selectedUser.name}</span>?</p>
             <div className="flex justify-end space-x-3">
               <Button variant="secondary" onClick={closeModal}>Cancel</Button>
-              <Button onClick={() => { onAction(selectedUser.id, 'verify_therapist'); closeModal(); }}>Verify</Button>
+              <Button onClick={() => { onAction(selectedUser.id, 'verify'); closeModal(); }}>Verify</Button>
             </div>
           </div>
         )}
@@ -425,7 +425,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
             </div>
             <div className="flex justify-end space-x-3">
               <Button variant="secondary" onClick={closeModal}>Cancel</Button>
-              <Button onClick={() => { onAction(selectedUser.id, 'message'); closeModal(); }}>Send</Button>
+              <Button onClick={() => { onAction(selectedUser.id, 'send-message'); closeModal(); }}>Send</Button>
             </div>
           </div>
         )}

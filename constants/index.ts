@@ -64,18 +64,54 @@ export const VALIDATION = {
 // API endpoints
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/api/auth/login',
-    LOGOUT: '/api/auth/logout',
-    FORGOT_PASSWORD: '/api/auth/forgot-password',
-    SIGNUP: '/api/auth/signup',
+    LOGIN: '/admin/login',
+    LOGOUT: '/admin/logout',
+    FORGOT_PASSWORD: '/admin/forgot-password',
+    SIGNUP: '/admin/signup',
+    CREATE_ADMIN: '/admin/create',
+  },
+  DASHBOARD: {
+    GET_DASHBOARD: '/admin/get-dashboard',
+    TOTAL_PREMIUM: '/admin/total-premium',
+    TOTAL_PLATINUM: '/admin/total-platinum',
+    NEW_REGISTERED: '/admin/new-registered',
+    TOTAL_USERS: '/admin/total-users',
+    TOTAL_THERAPISTS: '/admin/total-therapists',
+    TOTAL_PATIENTS: '/admin/total-patients',
+    TOTAL_REVENUE: '/admin/revenue',
+    MONTHLY_REVENUE: '/admin/monthly-revenue',
   },
   USERS: {
-    LIST: '/api/users',
-    UPDATE: '/api/users/:id',
-    DELETE: '/api/users/:id',
+    SEARCH_THERAPISTS: '/admin/search-therapist',
+    SEARCH_PATIENTS: '/admin/search-patient',
+    GET_ALL_PATIENTS: '/patient/get-all',
+    GET_PATIENT_BY_ID: '/patient/get',
+    NEW_REGISTERED_PATIENTS: '/patient/new-registered',
+    UPDATE_PATIENT: '/patient/update',
+    CHANGE_PATIENT_PASSWORD: '/patient/change-password',
+  },
+  USER_ACTIONS: {
+    VERIFY_THERAPIST: '/admin/therapist/verify',
+    SUSPEND_USER: '/admin/user/suspend',
+    RESET_PASSWORD: '/admin/user/reset-password',
+    SEND_MESSAGE: '/admin/user/send-message',
   },
   REPORTS: {
-    DOWNLOAD: '/api/reports/download',
+    THERAPIST_ACTIVITY: '/admin/reports/therapist-activity',
+    PATIENT_ACTIVITY: '/admin/reports/patient-activity',
+    FINANCIAL_ACTIVITY: '/admin/reports/financial-activity',
+    REPORT_HISTORY: '/admin/reports/history',
+  },
+  ANALYTICS: {
+    RECENT_ACTIVITY: '/admin/analytics/recent-activity',
+    USER_STATS: '/admin/analytics/user-stats',
+    REVENUE_ANALYTICS: '/admin/analytics/revenue',
+  },
+  PROFILE: {
+    GET_PROFILE: '/admin/profile',
+    UPDATE_PROFILE: '/admin/profile',
+    CHANGE_PASSWORD: '/admin/change-password',
+    EXPORT_DATA: '/admin/export-data',
   },
 } as const;
 

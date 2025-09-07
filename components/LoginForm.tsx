@@ -13,9 +13,10 @@ import Input from './UI/Input';
 interface LoginFormProps {
   onForgotPassword: () => void;
   onSignUp: () => void;
+  onCreateAdmin?: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp, onCreateAdmin }) => {
   const router = useRouter();
   const { login } = useAuth();
   
@@ -66,15 +67,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp }) => 
     setIsLoading(true);
     
     try {
-      const success = await login(formData.email, formData.password);
-      if (success) {
+      const result = await login(formData.email, formData.password);
+      if (result.success) {
         router.push('/dashboard');
       } else {
-        setErrors({ email: ERROR_MESSAGES.GENERIC });
+        setErrors({ email: result.error || 'Login failed. Please check your credentials.' });
       }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ email: ERROR_MESSAGES.GENERIC });
+      setErrors({ email: 'Network error. Please check your connection and try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -175,17 +176,33 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp }) => 
           </button>
         </div>
 
-        <div className="text-center pt-4 border-t border-gray-200">
-          <span className="text-sm text-gray-600">
-            Don&apos;t have an account?{' '}
-          </span>
-          <button
-            type="button"
-            onClick={onSignUp}
-            className="text-sm text-[#3C5671] hover:underline font-medium cursor-pointer"
-          >
-            Sign Up
-          </button>
+        <div className="text-center pt-4 border-t border-gray-200 space-y-2">
+          <div>
+            <span className="text-sm text-gray-600">
+              Don&apos;t have an account?{' '}
+            </span>
+            <button
+              type="button"
+              onClick={onSignUp}
+              className="text-sm text-[#3C5671] hover:underline font-medium cursor-pointer"
+            >
+              Sign Up
+            </button>
+          </div>
+          {onCreateAdmin && (
+            <div>
+              <span className="text-sm text-gray-600">
+                Need to create an admin?{' '}
+              </span>
+              <button
+                type="button"
+                onClick={onCreateAdmin}
+                className="text-sm text-[#3C5671] hover:underline font-medium cursor-pointer"
+              >
+                Create Admin
+              </button>
+            </div>
+          )}
         </div>
       </form>
     </div>

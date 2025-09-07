@@ -6,23 +6,51 @@ import Header from '../../../components/UI/Header';
 import UserTable from '../../../components/UI/UserTable';
 import SearchBar from '../../../components/UI/SearchBar';
 import Dropdown from '../../../components/UI/Dropdown';
+import LoadingSpinner from '../../../components/UI/LoadingSpinner';
 import { UserTableData } from '@/types';
 import { USERS } from '@/data/users';
 import { COLORS } from '@/constants';
 import { useSearchParams } from 'next/navigation';
+import { 
+  useSearchTherapists, 
+  useSearchPatients, 
+  useAllPatients,
+  useVerifyTherapist,
+  useSuspendUser,
+  useResetUserPassword,
+  useSendMessageToUser,
+  useUpdateUser
+} from '../../../hooks/useAdminApi';
 
 const UserManagement: React.FC = () => {
   const [activeNav, setActiveNav] = useState('user-management');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'All' | 'Therapist' | 'Patient'>('All');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Unrestricted' | 'Restricted' | 'Pending Verification'>('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Restricted' | 'Pending Verification'>('All');
   const [locationFilter, setLocationFilter] = useState<'All' | 'Lagos' | 'Abuja' | 'Kano'>('All');
   const [sortBy, setSortBy] = useState<'name' | 'lastLogin' | 'status'>('lastLogin');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const searchParams = useSearchParams();
-  // router not used currently
 
-  const mockUsers: UserTableData[] = USERS;
+  // API hooks
+  const { data: therapists, isLoading: isTherapistsLoading } = useSearchTherapists(
+    searchTerm, 
+    searchTerm.length > 0 && roleFilter === 'Therapist'
+  );
+  const { data: patients, isLoading: isPatientsLoading } = useSearchPatients(
+    searchTerm, 
+    searchTerm.length > 0 && roleFilter === 'Patient'
+  );
+  const { data: allPatients, isLoading: isAllPatientsLoading } = useAllPatients();
+
+  // Mutation hooks
+  const verifyTherapistMutation = useVerifyTherapist();
+  const suspendUserMutation = useSuspendUser();
+  const resetPasswordMutation = useResetUserPassword();
+  const sendMessageMutation = useSendMessageToUser();
+  const updateUserMutation = useUpdateUser();
+
+  const isLoading = isTherapistsLoading || isPatientsLoading || isAllPatientsLoading;
 
   // Hydrate filters from URL
   useEffect(() => {
@@ -33,30 +61,170 @@ const UserManagement: React.FC = () => {
   }, [searchParams]);
 
   const filteredUsers = useMemo(() => {
-    let list = mockUsers.filter(user =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.id.includes(searchTerm)
-    );
-    if (roleFilter !== 'All') list = list.filter(u => u.role === roleFilter);
-    if (statusFilter !== 'All') list = list.filter(u => u.status === statusFilter);
-    if (locationFilter !== 'All') list = list.filter(u => u.location === locationFilter);
+    let list: UserTableData[] = [];
+
+    // Get data based on search and role filter
+    if (searchTerm.length > 0) {
+      if (roleFilter === 'Therapist' && therapists) {
+        list = therapists.map(user => ({
+          id: user.id,
+          name: user.fullName,
+          email: user.email,
+          lastLogin: user.lastLogin || 'Never',
+          status: user.active === 'true' ? 'Active' : 'Restricted',
+          role: 'Therapist' as const,
+          location: user.city || 'Unknown',
+          phone: user.phone,
+          verificationStatus: user.verificationStatus === 'verified' ? 'Verified' : 'Pending',
+          rating: user.rating,
+          reviewsCount: user.reviewsCount,
+          activity: {
+            bookings: 0,
+            cancellations: 0,
+          }
+        }));
+      } else if (roleFilter === 'Patient' && patients) {
+        list = patients.map(user => ({
+          id: user.id,
+          name: user.fullName,
+          email: user.email,
+          lastLogin: user.lastLogin || 'Never',
+          status: user.active === 'true' ? 'Active' : 'Restricted',
+          role: 'Patient' as const,
+          location: user.city || 'Unknown',
+          phone: user.phone,
+          activity: {
+            bookings: 0,
+            cancellations: 0,
+          }
+        }));
+      }
+    } else {
+      // Show all patients when no search term
+      if (allPatients) {
+        list = allPatients.map(user => ({
+          id: user.id,
+          name: user.fullName,
+          email: user.email,
+          lastLogin: user.lastLogin || 'Never',
+          status: user.active === 'true' ? 'Active' : 'Restricted',
+          role: 'Patient' as const,
+          location: user.city || 'Unknown',
+          phone: user.phone,
+          activity: {
+            bookings: 0,
+            cancellations: 0,
+          }
+        }));
+      }
+    }
+
+    // Apply additional filters
+    if (statusFilter !== 'All') {
+      list = list.filter(u => u.status === statusFilter);
+    }
+    if (locationFilter !== 'All') {
+      list = list.filter(u => u.location === locationFilter);
+    }
+
+    // Sort
     list.sort((a, b) => {
       const dir = sortDir === 'asc' ? 1 : -1;
       if (sortBy === 'name') return a.name.localeCompare(b.name) * dir;
       if (sortBy === 'status') return (a.status || '').localeCompare(b.status || '') * dir;
       return a.lastLogin.localeCompare(b.lastLogin) * dir;
     });
-    return list;
-  }, [mockUsers, searchTerm, roleFilter, statusFilter, locationFilter, sortBy, sortDir]);
 
-  const handleAction = (userId: string, action?: string) => {
-    console.log('Action performed on user:', userId, action);
+    return list;
+  }, [therapists, patients, allPatients, searchTerm, roleFilter, statusFilter, locationFilter, sortBy, sortDir]);
+
+  const handleAction = async (userId: string, action?: string, data?: any) => {
+    console.log('handleAction called with:', { userId, action });
+    const user = filteredUsers.find(u => u.id === userId);
+    if (!user) {
+      console.log('User not found:', userId);
+      return;
+    }
+    console.log('User found:', user);
+
+    try {
+      switch (action) {
+        case 'verify':
+          console.log('Verifying therapist:', userId);
+          if (user.role === 'Therapist') {
+            await verifyTherapistMutation.mutateAsync({
+              therapistId: userId,
+              verified: true
+            });
+          }
+          break;
+        case 'suspend':
+          console.log('Suspending user:', userId);
+          await suspendUserMutation.mutateAsync({
+            userId: userId,
+            userType: (user.role || 'patient').toLowerCase() as 'therapist' | 'patient',
+            suspended: true,
+            reason: 'Admin action'
+          });
+          break;
+        case 'unsuspend':
+          await suspendUserMutation.mutateAsync({
+            userId: userId,
+            userType: (user.role || 'patient').toLowerCase() as 'therapist' | 'patient',
+            suspended: false
+          });
+          break;
+        case 'reset-password':
+          await resetPasswordMutation.mutateAsync({
+            userId: userId,
+            userType: (user.role || 'patient').toLowerCase() as 'therapist' | 'patient',
+            newPassword: 'newpassword123'
+          });
+          break;
+        case 'send-message':
+          await sendMessageMutation.mutateAsync({
+            userId: userId,
+            userType: (user.role || 'patient').toLowerCase() as 'therapist' | 'patient',
+            messageType: 'email',
+            subject: 'Important Notice',
+            message: 'This is an important message from admin.'
+          });
+          break;
+        case 'save':
+          console.log('Saving user changes for:', userId, data);
+          // Use the form data passed from the UserTable component
+          const updatedUserData = {
+            id: userId,
+            fullName: data.name || user.name,
+            email: data.email || user.email,
+            phone: data.phone || user.phone || '',
+            city: data.location || user.location || '',
+            country: '', // Not available in current data structure
+            gender: '', // Not available in current data structure
+            active: data.status === 'Active' ? 'true' : 'false'
+          };
+          
+          await updateUserMutation.mutateAsync(updatedUserData);
+          break;
+        default:
+          console.log('Action performed on user:', userId, action);
+      }
+    } catch (error) {
+      console.error('Error performing action:', error);
+    }
   };
 
   const handleNavChange = (navId: string) => {
     setActiveNav(navId);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.BACKGROUND.CONTENT }}>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: COLORS.BACKGROUND.CONTENT }}>
@@ -92,10 +260,10 @@ const UserManagement: React.FC = () => {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
                 <Dropdown
                   value={statusFilter}
-                  onChange={(v) => setStatusFilter(v as 'All' | 'Unrestricted' | 'Restricted' | 'Pending Verification')}
+                  onChange={(v) => setStatusFilter(v as 'All' | 'Active' | 'Restricted' | 'Pending Verification')}
                   options={[
                     { label: 'All', value: 'All' },
-                    { label: 'Unrestricted', value: 'Unrestricted' },
+                    { label: 'Active', value: 'Active' },
                     { label: 'Restricted', value: 'Restricted' },
                     { label: 'Pending Verification', value: 'Pending Verification' },
                   ]}
@@ -138,7 +306,7 @@ const UserManagement: React.FC = () => {
                 />
               </div>
               <div className="w-full sm:flex-1 min-w-0 flex items-center justify-start sm:justify-end">
-                <span className="text-sm text-gray-600 mt-1 sm:mt-0">{filteredUsers.length} of {mockUsers.length} users</span>
+                <span className="text-sm text-gray-600 mt-1 sm:mt-0">{filteredUsers.length} users</span>
               </div>
             </div>
           </div>

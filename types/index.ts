@@ -18,7 +18,7 @@ export interface UserTableData {
   name: string;
   email: string;
   lastLogin: string;
-  status: 'Unrestricted' | 'Restricted' | 'Pending Verification';
+  status: 'Active' | 'Restricted' | 'Pending Verification';
   role?: UserRole;
   location?: string;
   phone?: string;
@@ -35,8 +35,16 @@ export interface UserTableData {
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  createAdmin: (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    timezone?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
 }
 
 // Form types
@@ -58,7 +66,7 @@ export interface SignUpFormData {
 export interface EditUserFormData {
   name: string;
   email: string;
-  status: 'Unrestricted' | 'Restricted' | 'Pending Verification';
+  status: 'Active' | 'Restricted' | 'Pending Verification';
   role?: UserRole;
   location?: string;
 }

@@ -17,22 +17,20 @@ import Header from '../../../../components/UI/Header';
 import Button from '../../../../components/UI/Button';
 import { COLORS } from '@/constants';
 import { useParams, useRouter } from 'next/navigation';
-import { USERS } from '@/data/users';
-
-// Global users data
-const mockUsers = USERS;
+import { useUserById } from '../../../../hooks/useAdminApi';
+import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
 
 const UserDetailsPage: React.FC = () => {
   const [activeNav, setActiveNav] = useState('user-management');
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const user = useMemo(() => mockUsers.find(u => u.id === params.id), [params.id]);
+  const { data: user, isLoading, error } = useUserById(params.id || '');
 
   
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Unrestricted':
+      case 'Active':
         return <CheckCircle className="w-4 h-4 text-emerald-500" />;
       case 'Restricted':
         return <XCircle className="w-4 h-4 text-red-500" />;
@@ -45,7 +43,7 @@ const UserDetailsPage: React.FC = () => {
 
   const getStatusClasses = (status: string) => {
     switch (status) {
-      case 'Unrestricted':
+      case 'Active':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'Restricted':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -56,7 +54,25 @@ const UserDetailsPage: React.FC = () => {
     }
   };
 
-  if (!user) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex" style={{ backgroundColor: COLORS.BACKGROUND.CONTENT }}>
+        <Sidebar activeNav={activeNav} onNavChange={(id) => setActiveNav(id)} />
+        <div className="flex-1 lg:ml-0">
+          <Header title="User Details" />
+          <main className="p-4 sm:p-6 lg:p-8">
+            <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
+              <LoadingSpinner size="lg" />
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state or user not found
+  if (error || !user) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: COLORS.BACKGROUND.CONTENT }}>
         <Sidebar activeNav={activeNav} onNavChange={(id) => setActiveNav(id)} />
@@ -111,25 +127,25 @@ const UserDetailsPage: React.FC = () => {
                   
                   <div className="flex items-start space-x-6">
                     <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold">
-                      {user.name.charAt(0).toUpperCase()}
+                      {(user.fullName || user.name || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h1 className="text-2xl font-bold">{user.name}</h1>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusClasses(user.status)} bg-white/90 backdrop-blur-sm`}>
-                          {getStatusIcon(user.status)}
-                          <span className="ml-1">{user.status}</span>
+                        <h1 className="text-2xl font-bold">{user.fullName || user.name || 'Unknown User'}</h1>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusClasses(user.active === 'true' ? 'Active' : 'Restricted')} bg-white/90 backdrop-blur-sm`}>
+                          {getStatusIcon(user.active === 'true' ? 'Active' : 'Restricted')}
+                          <span className="ml-1">{user.active === 'true' ? 'Active' : 'Restricted'}</span>
                         </span>
                       </div>
                       <p className="text-white/80 mb-1">ID: {user.id}</p>
                       <div className="flex items-center space-x-4 text-sm text-white/80">
                         <span className="flex items-center">
                           <Shield className="w-4 h-4 mr-1" />
-                          {user.role}
+                          {user.role === 'therapist' ? 'Therapist' : 'Patient'}
                         </span>
                         <span className="flex items-center">
                           <MapPin className="w-4 h-4 mr-1" />
-                          {user.location}
+                          {user.city || user.location || 'Not specified'}
                         </span>
                         
                       </div>
@@ -151,7 +167,7 @@ const UserDetailsPage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Name</p>
-                  <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                  <p className="text-sm font-semibold text-gray-900">{user.fullName || user.name || 'Unknown'}</p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
@@ -159,7 +175,7 @@ const UserDetailsPage: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</p>
-                    <p className="text-sm font-semibold text-gray-900">{user.email}</p>
+                    <p className="text-sm font-semibold text-gray-900">{user.email || '—'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -168,7 +184,7 @@ const UserDetailsPage: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Role</p>
-                    <p className="text-sm font-semibold text-gray-900">{user.role}</p>
+                    <p className="text-sm font-semibold text-gray-900">{user.role === 'therapist' ? 'Therapist' : 'Patient'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -177,7 +193,7 @@ const UserDetailsPage: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Location</p>
-                    <p className="text-sm font-semibold text-gray-900">{user.location || '—'}</p>
+                    <p className="text-sm font-semibold text-gray-900">{user.city || user.location || '—'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -185,18 +201,18 @@ const UserDetailsPage: React.FC = () => {
                     <Calendar className="w-5 h-5 text-amber-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</p>
-                    <p className="text-sm font-semibold text-gray-900">{user.lastLogin}</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</p>
+                    <p className="text-sm font-semibold text-gray-900">{user.phone || '—'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
-                    {getStatusIcon(user.status)}
+                    {getStatusIcon(user.active === 'true' ? 'Active' : 'Restricted')}
                   </div>
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</p>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusClasses(user.status)}`}>
-                      {user.status}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusClasses(user.active === 'true' ? 'Active' : 'Restricted')}`}>
+                      {user.active === 'true' ? 'Active' : 'Restricted'}
                     </span>
                   </div>
                 </div>

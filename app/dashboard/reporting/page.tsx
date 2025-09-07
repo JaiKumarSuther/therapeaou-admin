@@ -10,8 +10,15 @@ import Sidebar from '../../../components/UI/Sidebar';
 import Header from '../../../components/UI/Header';
 import ReportCard from '../../../components/UI/ReportCard';
 import Dropdown from '../../../components/UI/Dropdown';
+import LoadingSpinner from '../../../components/UI/LoadingSpinner';
 import { ReportData, ReportHistoryItem } from '@/types';
 import { COLORS } from '@/constants';
+import { 
+  useTherapistActivityReport, 
+  usePatientActivityReport, 
+  useFinancialActivityReport, 
+  useReportHistory 
+} from '../../../hooks/useAdminApi';
 
 const Reporting: React.FC = () => {
   const [activeNav, setActiveNav] = useState('reporting');
@@ -21,38 +28,84 @@ const Reporting: React.FC = () => {
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
 
-  const reportData: ReportData[] = [
-    {
-      title: 'Therapist Activity',
-      value: 'Sessions 2,134 · Cancels 84 · Rating 4.6',
-      icon: FiUsers,
-      iconBg: 'bg-purple-100',
-      iconColor: 'text-purple-600',
-      type: 'therapist'
-    },
-    {
-      title: 'Patient Activity',
-      value: 'Bookings 3,420 · Cancels 132 · Reviews 980',
-      icon: FiPackage,
-      iconBg: 'bg-yellow-100',
-      iconColor: 'text-yellow-600',
-      type: 'patient'
-    },
-    {
-      title: 'Financial Activity',
-      value: 'Payments $120k · Refunds $4.2k · Commission $18k',
-      icon: FiTrendingUp,
-      iconBg: 'bg-green-100',
-      iconColor: 'text-green-600',
-      type: 'financial'
-    }
-  ];
+  // API calls for reporting data
+  const { data: therapistReport, isLoading: isTherapistLoading } = useTherapistActivityReport({
+    from: dateFrom || '2024-01-01',
+    to: dateTo || '2024-12-31',
+    status: statusFilter === 'All' ? undefined : statusFilter.toLowerCase(),
+    location: locationFilter === 'All' ? undefined : locationFilter
+  });
 
-  const reportHistory: ReportHistoryItem[] = useMemo(() => ([
-    { id: 'rh1', type: 'Therapist Activity', createdAt: '2024-01-15 11:10', createdBy: 'Admin James' },
-    { id: 'rh2', type: 'Patient Activity', createdAt: '2024-01-14 16:05', createdBy: 'Admin Mary' },
-    { id: 'rh3', type: 'Financial Activity', createdAt: '2024-01-14 10:45', createdBy: 'Admin James' },
-  ]), []);
+  const { data: patientReport, isLoading: isPatientLoading } = usePatientActivityReport({
+    from: dateFrom || '2024-01-01',
+    to: dateTo || '2024-12-31',
+    status: statusFilter === 'All' ? undefined : statusFilter.toLowerCase(),
+    location: locationFilter === 'All' ? undefined : locationFilter
+  });
+
+  const { data: financialReport, isLoading: isFinancialLoading } = useFinancialActivityReport({
+    from: dateFrom || '2024-01-01',
+    to: dateTo || '2024-12-31'
+  });
+
+  const { data: reportHistory, isLoading: isHistoryLoading } = useReportHistory();
+
+  const isLoading = isTherapistLoading || isPatientLoading || isFinancialLoading || isHistoryLoading;
+
+  const reportData: ReportData[] = useMemo(() => {
+    // Calculate totals from arrays
+    const therapistTotals = therapistReport ? {
+      totalSessions: therapistReport.reduce((sum, report) => sum + (report.sessionsCompleted || 0), 0),
+      totalCancellations: therapistReport.reduce((sum, report) => sum + (report.cancellations || 0), 0),
+      averageRating: therapistReport.length > 0 ? 
+        therapistReport.reduce((sum, report) => sum + (report.averageRating || 0), 0) / therapistReport.length : 0
+    } : null;
+
+    const patientTotals = patientReport ? {
+      totalBookings: patientReport.reduce((sum, report) => sum + (report.bookings || 0), 0),
+      totalCancellations: patientReport.reduce((sum, report) => sum + (report.cancellations || 0), 0),
+      totalReviews: patientReport.reduce((sum, report) => sum + (report.reviews || 0), 0)
+    } : null;
+
+    const financialTotals = financialReport ? {
+      totalPayments: financialReport.reduce((sum, report) => sum + (report.payments || 0), 0),
+      totalRefunds: financialReport.reduce((sum, report) => sum + (report.refunds || 0), 0),
+      totalCommission: financialReport.reduce((sum, report) => sum + (report.commission || 0), 0)
+    } : null;
+
+    return [
+      {
+        title: 'Therapist Activity',
+        value: therapistTotals ? 
+          `Sessions ${therapistTotals.totalSessions} · Cancels ${therapistTotals.totalCancellations} · Rating ${therapistTotals.averageRating.toFixed(1)}` :
+          'Loading...',
+        icon: FiUsers,
+        iconBg: 'bg-purple-100',
+        iconColor: 'text-purple-600',
+        type: 'therapist'
+      },
+      {
+        title: 'Patient Activity',
+        value: patientTotals ? 
+          `Bookings ${patientTotals.totalBookings} · Cancels ${patientTotals.totalCancellations} · Reviews ${patientTotals.totalReviews}` :
+          'Loading...',
+        icon: FiPackage,
+        iconBg: 'bg-yellow-100',
+        iconColor: 'text-yellow-600',
+        type: 'patient'
+      },
+      {
+        title: 'Financial Activity',
+        value: financialTotals ? 
+          `Payments $${financialTotals.totalPayments.toLocaleString()} · Refunds $${financialTotals.totalRefunds.toLocaleString()} · Commission $${financialTotals.totalCommission.toLocaleString()}` :
+          'Loading...',
+        icon: FiTrendingUp,
+        iconBg: 'bg-green-100',
+        iconColor: 'text-green-600',
+        type: 'financial'
+      }
+    ];
+  }, [therapistReport, patientReport, financialReport]);
 
   const handleNavChange = (navId: string) => {
     setActiveNav(navId);
@@ -61,6 +114,22 @@ const Reporting: React.FC = () => {
   const handleDownload = (reportType: string) => {
     console.log('Downloading report:', reportType, { roleFilter, statusFilter, locationFilter, dateFrom, dateTo });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex" style={{ backgroundColor: COLORS.BACKGROUND.CONTENT }}>
+        <Sidebar activeNav={activeNav} onNavChange={handleNavChange} />
+        <div className="flex-1 lg:ml-0">
+          <Header title="Reporting" />
+          <main className="p-4 sm:p-6 lg:p-8">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <LoadingSpinner size="lg" />
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: COLORS.BACKGROUND.CONTENT }}>
@@ -143,28 +212,35 @@ const Reporting: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Report History</h2>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated By</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {reportHistory.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.createdAt}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.type}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.createdBy}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button onClick={() => console.log('Download history item', item.id)} className="text-[#3C5671] hover:opacity-80">Download</button>
-                      </td>
+              {reportHistory && reportHistory.length > 0 ? (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated By</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {reportHistory.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.createdAt}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.type}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.createdBy}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <button onClick={() => console.log('Download history item', item.id)} className="text-[#3C5671] hover:opacity-80">Download</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 text-sm">No report history available</p>
+                  <p className="text-gray-400 text-xs mt-1">Generated reports will appear here</p>
+                </div>
+              )}
             </div>
           </div>
         </main>
