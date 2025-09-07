@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FiUser, 
   FiShield, 
@@ -13,18 +13,31 @@ import Header from '../../../components/UI/Header';
 import Button from '../../../components/UI/Button';
 import Input from '../../../components/UI/Input';
 import { COLORS } from '@/constants';
+import { 
+  useAdminProfile, 
+  useUpdateAdminProfile, 
+  useChangeAdminPassword, 
+  useExportAdminData 
+} from '../../../hooks/useAdminApi';
+import { toast } from 'react-hot-toast';
 
 const Settings: React.FC = () => {
   const [activeNav, setActiveNav] = useState('settings');
   const [activeTab, setActiveTab] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
 
+  // API hooks
+  const { data: adminProfile, isLoading: isProfileLoading, refetch: refetchProfile } = useAdminProfile();
+  const updateProfileMutation = useUpdateAdminProfile();
+  const changePasswordMutation = useChangeAdminPassword();
+  const exportDataMutation = useExportAdminData();
+
   // Form states
   const [profileData, setProfileData] = useState({
-    firstName: 'Jai',
-    lastName: 'Kumar',
-    email: 'iamjaisuthar@gmail.com',
-    phone: '+923102187976',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     timezone: 'UTC-5 (Eastern Time)'
   });
 
@@ -42,16 +55,71 @@ const Settings: React.FC = () => {
     securityAlerts: true
   });
 
+  // Load profile data from API
+  useEffect(() => {
+    if (adminProfile) {
+      setProfileData({
+        firstName: adminProfile.firstName || '',
+        lastName: adminProfile.lastName || '',
+        email: adminProfile.email || '',
+        phone: adminProfile.phoneNumber || '',
+        timezone: 'UTC-5 (Eastern Time)' // Default timezone
+      });
+    }
+  }, [adminProfile]);
+
   const handleNavChange = (navId: string) => {
     setActiveNav(navId);
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    console.log('Settings saved successfully');
+    try {
+      if (activeTab === 'profile') {
+        await updateProfileMutation.mutateAsync({
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          email: profileData.email,
+          phoneNumber: profileData.phone
+        });
+        toast.success('Profile updated successfully');
+      } else if (activeTab === 'security') {
+        if (securityData.newPassword !== securityData.confirmPassword) {
+          toast.error('New passwords do not match');
+          setIsSaving(false);
+          return;
+        }
+        await changePasswordMutation.mutateAsync({
+          email: profileData.email,
+          currentPassword: securityData.currentPassword,
+          newPassword: securityData.newPassword
+        });
+        toast.success('Password changed successfully');
+        // Clear password fields
+        setSecurityData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+          twoFactorEnabled: securityData.twoFactorEnabled
+        });
+      } else {
+        // For other tabs, just show success message
+        toast.success('Settings saved successfully');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      await exportDataMutation.mutateAsync();
+      toast.success('Data export initiated. Download will start shortly.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to export data');
+    }
   };
 
   const tabs = [
@@ -62,54 +130,69 @@ const Settings: React.FC = () => {
     { id: 'data', label: 'Data & Privacy', icon: FiDatabase }
   ];
 
-  const renderProfileTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  const renderProfileTab = () => {
+    if (isProfileLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500">Loading profile data...</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="First Name"
+            value={profileData.firstName}
+            onChange={(value) => setProfileData({ ...profileData, firstName: value })}
+            placeholder="Enter first name"
+            disabled={updateProfileMutation.isPending}
+          />
+          <Input
+            label="Last Name"
+            value={profileData.lastName}
+            onChange={(value) => setProfileData({ ...profileData, lastName: value })}
+            placeholder="Enter last name"
+            disabled={updateProfileMutation.isPending}
+          />
+        </div>
         <Input
-          label="First Name"
-          value={profileData.firstName}
-          onChange={(value) => setProfileData({ ...profileData, firstName: value })}
-          placeholder="Enter first name"
+          label="Email Address"
+          type="email"
+          value={profileData.email}
+          onChange={(value) => setProfileData({ ...profileData, email: value })}
+          placeholder="Enter email address"
+          disabled={updateProfileMutation.isPending}
         />
         <Input
-          label="Last Name"
-          value={profileData.lastName}
-          onChange={(value) => setProfileData({ ...profileData, lastName: value })}
-          placeholder="Enter last name"
+          label="Phone Number"
+          type="tel"
+          value={profileData.phone}
+          onChange={(value) => setProfileData({ ...profileData, phone: value })}
+          placeholder="Enter phone number"
+          disabled={updateProfileMutation.isPending}
         />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Timezone
+          </label>
+          <select
+            value={profileData.timezone}
+            onChange={(e) => setProfileData({ ...profileData, timezone: e.target.value })}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color] disabled:bg-gray-100 disabled:cursor-not-allowed"
+            style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}
+            disabled={updateProfileMutation.isPending}
+          >
+            <option value="UTC-5 (Eastern Time)">UTC-5 (Eastern Time)</option>
+            <option value="UTC-6 (Central Time)">UTC-6 (Central Time)</option>
+            <option value="UTC-7 (Mountain Time)">UTC-7 (Mountain Time)</option>
+            <option value="UTC-8 (Pacific Time)">UTC-8 (Pacific Time)</option>
+          </select>
+        </div>
       </div>
-      <Input
-        label="Email Address"
-        type="email"
-        value={profileData.email}
-        onChange={(value) => setProfileData({ ...profileData, email: value })}
-        placeholder="Enter email address"
-      />
-      <Input
-        label="Phone Number"
-        type="tel"
-        value={profileData.phone}
-        onChange={(value) => setProfileData({ ...profileData, phone: value })}
-        placeholder="Enter phone number"
-      />
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Timezone
-        </label>
-        <select
-          value={profileData.timezone}
-          onChange={(e) => setProfileData({ ...profileData, timezone: e.target.value })}
-          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
-          style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}
-        >
-          <option value="UTC-5 (Eastern Time)">UTC-5 (Eastern Time)</option>
-          <option value="UTC-6 (Central Time)">UTC-6 (Central Time)</option>
-          <option value="UTC-7 (Mountain Time)">UTC-7 (Mountain Time)</option>
-          <option value="UTC-8 (Pacific Time)">UTC-8 (Pacific Time)</option>
-        </select>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderSecurityTab = () => (
     <div className="space-y-6">
@@ -119,6 +202,7 @@ const Settings: React.FC = () => {
         value={securityData.currentPassword}
         onChange={(value) => setSecurityData({ ...securityData, currentPassword: value })}
         placeholder="Enter current password"
+        disabled={changePasswordMutation.isPending}
       />
       <Input
         label="New Password"
@@ -126,6 +210,7 @@ const Settings: React.FC = () => {
         value={securityData.newPassword}
         onChange={(value) => setSecurityData({ ...securityData, newPassword: value })}
         placeholder="Enter new password"
+        disabled={changePasswordMutation.isPending}
       />
       <Input
         label="Confirm New Password"
@@ -133,6 +218,7 @@ const Settings: React.FC = () => {
         value={securityData.confirmPassword}
         onChange={(value) => setSecurityData({ ...securityData, confirmPassword: value })}
         placeholder="Confirm new password"
+        disabled={changePasswordMutation.isPending}
       />
       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
         <div>
@@ -229,8 +315,13 @@ const Settings: React.FC = () => {
         <p className="text-sm mb-4" style={{ color: COLORS.PRIMARY.LIGHT_BLUE }}>
           Download a copy of your data including profile information, activity logs, and preferences.
         </p>
-        <Button variant="outline" size="sm">
-          Export Data
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleExportData}
+          loading={exportDataMutation.isPending}
+        >
+          {exportDataMutation.isPending ? 'Exporting...' : 'Export Data'}
         </Button>
       </div>
       <div className="p-4 bg-red-50 rounded-lg">
@@ -306,8 +397,12 @@ const Settings: React.FC = () => {
               <Button variant="secondary" onClick={() => console.log('Cancel clicked')}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} loading={isSaving}>
-                {isSaving ? 'Saving...' : 'Save Changes'}
+              <Button 
+                onClick={handleSave} 
+                loading={isSaving || updateProfileMutation.isPending || changePasswordMutation.isPending}
+                disabled={isSaving || updateProfileMutation.isPending || changePasswordMutation.isPending}
+              >
+                {isSaving || updateProfileMutation.isPending || changePasswordMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </div>

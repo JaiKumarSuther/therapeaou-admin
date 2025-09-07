@@ -62,9 +62,17 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
       }
     };
 
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenDropdown(null);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, []);
 
@@ -80,36 +88,46 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
     setOpenDropdown(openDropdown === userId ? null : userId);
   };
 
-  const handleActionClick = (userId: string, action: string) => {
-    setOpenDropdown(null);
-    // Handle the action here
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      switch (action) {
-        case 'view':
-          router.push(`/dashboard/user-management/${encodeURIComponent(userId)}`);
-          break;
-        case 'edit':
-          handleEditUser(user);
-          break;
-        case 'verify':
-          handleVerifyTherapist(user);
-          break;
-        case 'suspend':
-          handleSuspend(user);
-          break;
-        case 'reset':
-          handleResetPassword(user);
-          break;
-        case 'message':
-          setSelectedUser(user);
-          setShowMessageModal(true);
-          break;
-      }
+  const handleActionClick = (userId: string, action: string, event?: React.MouseEvent | React.TouchEvent) => {
+    // Prevent event bubbling and default behavior
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
     }
+    
+    setOpenDropdown(null);
+    
+    // Small delay to ensure dropdown closes before modal opens
+    setTimeout(() => {
+      const user = users.find(u => u.id === userId);
+      if (user) {
+        switch (action) {
+          case 'view':
+            router.push(`/dashboard/user-management/${encodeURIComponent(userId)}`);
+            break;
+          case 'edit':
+            handleEditUser(user);
+            break;
+          case 'verify':
+            handleVerifyTherapist(user);
+            break;
+          case 'suspend':
+            handleSuspend(user);
+            break;
+          case 'reset':
+            handleResetPassword(user);
+            break;
+          case 'message':
+            setSelectedUser(user);
+            setShowMessageModal(true);
+            break;
+        }
+      }
+    }, 100);
   };
 
   const handleEditUser = (user: UserTableData) => {
+    console.log('Opening edit modal for user:', user);
     setSelectedUser(user);
     setEditForm({
       name: user.name,
@@ -129,6 +147,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
       consultationFee: user.consultationFee || ''
     });
     setShowEditModal(true);
+    console.log('Edit modal state set to true');
   };
 
   const handleSaveEdit = () => {
@@ -141,18 +160,24 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   };
 
   const handleSuspend = (user: UserTableData) => {
+    console.log('Opening suspend modal for user:', user);
     setSelectedUser(user);
     setShowSuspendModal(true);
+    console.log('Suspend modal state set to true');
   };
 
   const handleResetPassword = (user: UserTableData) => {
+    console.log('Opening reset password modal for user:', user);
     setSelectedUser(user);
     setShowResetModal(true);
+    console.log('Reset modal state set to true');
   };
 
   const handleVerifyTherapist = (user: UserTableData) => {
+    console.log('Opening verify modal for user:', user);
     setSelectedUser(user);
     setShowVerifyModal(true);
+    console.log('Verify modal state set to true');
   };
 
   const closeModal = () => {
@@ -224,8 +249,17 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
               </span>
               <div className="relative" ref={setDropdownRef(user.id)}>
                 <button
-                  onClick={() => toggleDropdown(user.id)}
-                  className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleDropdown(user.id);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleDropdown(user.id);
+                  }}
+                  className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 active:bg-gray-100 rounded-md transition-colors cursor-pointer"
                   title="Actions"
                   aria-label="User actions"
                 >
@@ -233,48 +267,54 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 </button>
                 
                 {openDropdown === user.id && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-white rounded-md shadow-lg z-50 border border-gray-200 sm:right-0 -right-2">
                     <div className="py-1">
                       <button
-                        onClick={() => handleActionClick(user.id, 'view')}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={(e) => handleActionClick(user.id, 'view', e)}
+                        onTouchEnd={(e) => handleActionClick(user.id, 'view', e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                       >
                         <FiEye className="w-4 h-4 mr-3" />
                         View Details
                       </button>
                       <button
-                        onClick={() => handleActionClick(user.id, 'edit')}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={(e) => handleActionClick(user.id, 'edit', e)}
+                        onTouchEnd={(e) => handleActionClick(user.id, 'edit', e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                       >
                         <FiEdit className="w-4 h-4 mr-3" />
                         Edit User
                       </button>
                       {user.role === 'Therapist' && (
                         <button
-                          onClick={() => handleActionClick(user.id, 'verify')}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={(e) => handleActionClick(user.id, 'verify', e)}
+                          onTouchEnd={(e) => handleActionClick(user.id, 'verify', e)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                         >
                           <FiUserCheck className="w-4 h-4 mr-3" />
                           Verify Therapist
                         </button>
                       )}
                       <button
-                        onClick={() => handleActionClick(user.id, 'suspend')}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={(e) => handleActionClick(user.id, 'suspend', e)}
+                        onTouchEnd={(e) => handleActionClick(user.id, 'suspend', e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                       >
                         <FiSlash className="w-4 h-4 mr-3" />
                         Suspend/Ban
                       </button>
                       <button
-                        onClick={() => handleActionClick(user.id, 'reset')}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={(e) => handleActionClick(user.id, 'reset', e)}
+                        onTouchEnd={(e) => handleActionClick(user.id, 'reset', e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                       >
                         <FiRotateCcw className="w-4 h-4 mr-3" />
                         Reset Password
                       </button>
                       <button
-                        onClick={() => handleActionClick(user.id, 'message')}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={(e) => handleActionClick(user.id, 'message', e)}
+                        onTouchEnd={(e) => handleActionClick(user.id, 'message', e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                       >
                         <FiMail className="w-4 h-4 mr-3" />
                         Send Message
@@ -357,8 +397,17 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 <td className="px-3 py-4 text-sm font-medium">
                   <div className="relative" ref={setDropdownRef(user.id)}>
                     <button
-                      onClick={() => toggleDropdown(user.id)}
-                      className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleDropdown(user.id);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleDropdown(user.id);
+                      }}
+                      className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 active:bg-gray-100 rounded-md transition-colors cursor-pointer"
                       title="Actions"
                       aria-label="User actions"
                     >
@@ -366,48 +415,54 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                     </button>
                     
                     {openDropdown === user.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                         <div className="py-1">
                           <button
-                            onClick={() => handleActionClick(user.id, 'view')}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={(e) => handleActionClick(user.id, 'view', e)}
+                            onTouchEnd={(e) => handleActionClick(user.id, 'view', e)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                           >
                             <FiEye className="w-4 h-4 mr-3" />
                             View Details
                           </button>
                           <button
-                            onClick={() => handleActionClick(user.id, 'edit')}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={(e) => handleActionClick(user.id, 'edit', e)}
+                            onTouchEnd={(e) => handleActionClick(user.id, 'edit', e)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                           >
                             <FiEdit className="w-4 h-4 mr-3" />
                             Edit User
                           </button>
                           {user.role === 'Therapist' && (
                             <button
-                              onClick={() => handleActionClick(user.id, 'verify')}
-                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={(e) => handleActionClick(user.id, 'verify', e)}
+                              onTouchEnd={(e) => handleActionClick(user.id, 'verify', e)}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                             >
                               <FiUserCheck className="w-4 h-4 mr-3" />
                               Verify Therapist
                             </button>
                           )}
                           <button
-                            onClick={() => handleActionClick(user.id, 'suspend')}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={(e) => handleActionClick(user.id, 'suspend', e)}
+                            onTouchEnd={(e) => handleActionClick(user.id, 'suspend', e)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                           >
                             <FiSlash className="w-4 h-4 mr-3" />
                             Suspend/Ban
                           </button>
                           <button
-                            onClick={() => handleActionClick(user.id, 'reset')}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={(e) => handleActionClick(user.id, 'reset', e)}
+                            onTouchEnd={(e) => handleActionClick(user.id, 'reset', e)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                           >
                             <FiRotateCcw className="w-4 h-4 mr-3" />
                             Reset Password
                           </button>
                           <button
-                            onClick={() => handleActionClick(user.id, 'message')}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={(e) => handleActionClick(user.id, 'message', e)}
+                            onTouchEnd={(e) => handleActionClick(user.id, 'message', e)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-gray-200"
                           >
                             <FiMail className="w-4 h-4 mr-3" />
                             Send Message

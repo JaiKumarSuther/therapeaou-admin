@@ -175,18 +175,32 @@ const Dashboard: React.FC = () => {
 
           {/* Additional Content Area */}
           <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Recent Activity</h2>
+              {activities.length > 0 && (
+                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                  {activities.length} {activities.length === 1 ? 'item' : 'items'}
+                </span>
+              )}
+            </div>
             {activities.length > 0 ? (
-              <ul className="divide-y divide-gray-200">
-                {activities.map((act) => (
-                  <li key={act.id} className="py-3 sm:py-4 flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-gray-900">{act.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">{act.createdAt}{act.actor ? ` · ${act.actor}` : ''}{act.meta?.role ? ` · ${act.meta.role}` : ''}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+                <ul className="divide-y divide-gray-200">
+                  {activities.map((act) => (
+                    <li key={act.id} className="py-3 sm:py-4 flex items-start justify-between hover:bg-gray-50 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 break-words">{act.description}</p>
+                        <p className="text-xs text-gray-500 mt-1 break-words">{act.createdAt}{act.actor ? ` · ${act.actor}` : ''}{act.meta?.role ? ` · ${act.meta.role}` : ''}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {activities.length > 8 && (
+                  <div className="text-center py-2 text-xs text-gray-400 border-t border-gray-100">
+                    Scroll to see more activities
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 text-sm">No recent activity data available</p>

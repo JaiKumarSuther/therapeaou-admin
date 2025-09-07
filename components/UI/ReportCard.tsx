@@ -30,19 +30,19 @@ const ReportCard: React.FC<ReportCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200">
+    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base sm:text-lg font-semibold text-gray-800 truncate">{title}</h3>
         <div className={`w-10 h-10 sm:w-12 sm:h-12 ${iconBg} rounded-lg flex items-center justify-center flex-shrink-0 ml-3`}>
           <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`} />
         </div>
       </div>
-      <div className="mb-4 sm:mb-6">
+      <div className="flex-1 mb-4 sm:mb-6">
         <p className="text-lg sm:text-xl font-semibold text-gray-900 leading-6 sm:leading-7">{value}</p>
       </div>
       <button
         onClick={handleDownload}
-        className="w-full py-2 sm:py-3 px-3 sm:px-4 rounded-md font-medium text-sm transition-all duration-200 flex items-center justify-center"
+        className="w-full py-2 sm:py-3 px-3 sm:px-4 rounded-md font-medium text-sm transition-all duration-200 flex items-center justify-center mt-auto"
         style={{ color: '#3C5671', borderColor: '#3C5671', borderWidth: 1, backgroundColor: 'transparent' }}
         onMouseOver={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(60,86,113,0.06)'; }}
         onMouseOut={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
