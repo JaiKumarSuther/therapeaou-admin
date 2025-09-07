@@ -7,6 +7,7 @@ import UserTable from '../../../components/UI/UserTable';
 import SearchBar from '../../../components/UI/SearchBar';
 import Dropdown from '../../../components/UI/Dropdown';
 import LoadingSpinner from '../../../components/UI/LoadingSpinner';
+import Pagination from '../../../components/UI/Pagination';
 import { UserTableData, EditUserFormData } from '@/types';
 import { User } from '@/lib/api/admin';
 import { COLORS } from '@/constants';
@@ -31,6 +32,8 @@ const UserManagement: React.FC = () => {
   const [locationFilter, setLocationFilter] = useState<'All' | 'Lagos' | 'Abuja' | 'Kano'>('All');
   const [sortBy, setSortBy] = useState<'name' | 'lastLogin' | 'status'>('lastLogin');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   const searchParams = useSearchParams();
 
   // API hooks - Get all users (both therapists and patients)
@@ -173,6 +176,29 @@ const UserManagement: React.FC = () => {
 
     return list;
   }, [therapists, patients, allPatients, allTherapists, searchTerm, roleFilter, statusFilter, locationFilter, sortBy, sortDir]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter, locationFilter, sortBy, sortDir]);
+
+  // Calculate pagination
+  const totalItems = filteredUsers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Handle items per page change
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
   const handleAction = async (userId: string, action?: string, data?: EditUserFormData) => {
     console.log('handleAction called with:', { userId, action });
@@ -353,7 +379,7 @@ const UserManagement: React.FC = () => {
                 <div className="flex items-center gap-2">
                   {isSearching && <LoadingSpinner size="sm" />}
                   <span className="text-sm text-gray-600 mt-1 sm:mt-0">
-                    {filteredUsers.length} users
+                    {totalItems} users
                   </span>
                 </div>
               </div>
@@ -362,7 +388,19 @@ const UserManagement: React.FC = () => {
 
           {/* User Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <UserTable users={filteredUsers} onAction={handleAction} />
+            <UserTable users={paginatedUsers} onAction={handleAction} />
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+              />
+            )}
           </div>
         </main>
       </div>
