@@ -109,7 +109,9 @@ export const API_ENDPOINTS = {
   },
   PROFILE: {
     GET_PROFILE: '/admin/profile',
+    GET_PROFILE_BY_ID: '/admin/profile', // Will be appended with /{adminId}
     UPDATE_PROFILE: '/admin/profile',
+    UPDATE_PROFILE_BY_ID: '/admin/profile', // Will be appended with /{adminId}
     CHANGE_PASSWORD: '/admin/change-password',
     EXPORT_DATA: '/admin/export-data',
   },
@@ -119,6 +121,7 @@ export const API_ENDPOINTS = {
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
   USER_DATA: 'user_data',
+  ADMIN_ID: 'admin_id',
   REMEMBER_ME: 'remember_me',
 } as const;
 

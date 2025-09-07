@@ -1,4 +1,5 @@
 import { apiService, ApiResponse } from '../api';
+import { getAdminId } from '../../utils';
 
 // Admin API types based on the Postman collection
 export interface AdminLoginRequest {
@@ -142,12 +143,16 @@ export class AdminApiService {
   }
 
   async getProfile(adminId?: string): Promise<ApiResponse<AdminLoginResponse['admin']>> {
-    const url = adminId ? `/admin/profile/${adminId}` : '/admin/profile';
+    // Use provided adminId or get from localStorage
+    const id = adminId || getAdminId();
+    const url = id ? `/admin/profile/${id}` : '/admin/profile';
     return apiService.get(url);
   }
 
   async updateProfile(data: Partial<AdminLoginResponse['admin']>, adminId?: string): Promise<ApiResponse<AdminLoginResponse['admin']>> {
-    const url = adminId ? `/admin/profile/${adminId}` : '/admin/profile';
+    // Use provided adminId or get from localStorage
+    const id = adminId || getAdminId();
+    const url = id ? `/admin/profile/${id}` : '/admin/profile';
     return apiService.put(url, data);
   }
 

@@ -183,8 +183,8 @@ export interface PatientData {
 export interface KPIData {
   title: string;
   value: string;
-  trend: string;
-  trendType: 'up' | 'down';
+  trend?: string;
+  trendType?: 'up' | 'down';
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;

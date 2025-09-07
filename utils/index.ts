@@ -1,4 +1,4 @@
-import { VALIDATION, ERROR_MESSAGES } from '@/constants';
+import { VALIDATION, ERROR_MESSAGES, STORAGE_KEYS } from '@/constants';
 
 // Validation utilities
 export const validateEmail = (email: string): boolean => {
@@ -132,6 +132,27 @@ export const storage = {
       // Handle storage error silently
     }
   },
+};
+
+// Auth utilities
+export const getAdminId = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(STORAGE_KEYS.ADMIN_ID);
+};
+
+export const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+};
+
+export const getUserData = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const userData = localStorage.getItem(STORAGE_KEYS.USER_DATA);
+    return userData ? JSON.parse(userData) : null;
+  } catch {
+    return null;
+  }
 };
 
 // Debounce utility

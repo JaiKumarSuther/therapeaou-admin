@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { adminApiService, AdminLoginRequest, AdminLoginResponse, CreateAdminRequest } from '../../lib/api/admin';
+import { STORAGE_KEYS } from '../../constants';
 
 // Auth state interface
 interface AuthState {
@@ -26,10 +27,13 @@ export const loginAsync = createAsyncThunk(
     try {
       const response = await adminApiService.login(credentials);
       if (response.success && response.data) {
-        // Store token and user data in localStorage
-        localStorage.setItem('auth_token', response.data.token);
-        localStorage.setItem('user_data', JSON.stringify(response.data.admin));
-        return response.data;
+        // The API returns the admin object directly, not wrapped in { token, admin }
+        const adminData = response.data as any;
+        // Store token, user data, and admin ID in localStorage
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, adminData.token || '');
+        localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(adminData));
+        localStorage.setItem(STORAGE_KEYS.ADMIN_ID, adminData.id);
+        return { token: adminData.token || '', admin: adminData };
       } else {
         return rejectWithValue(response.error || 'Login failed');
       }
@@ -62,7 +66,8 @@ export const updateProfileAsync = createAsyncThunk(
       const response = await adminApiService.updateProfile(data);
       if (response.success && response.data) {
         // Update localStorage
-        localStorage.setItem('user_data', JSON.stringify(response.data));
+        localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.data));
+        localStorage.setItem(STORAGE_KEYS.ADMIN_ID, response.data.id);
         return response.data;
       } else {
         return rejectWithValue(response.error || 'Failed to update profile');
@@ -120,15 +125,16 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       // Clear localStorage
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+      localStorage.removeItem(STORAGE_KEYS.ADMIN_ID);
     },
     clearError: (state) => {
       state.error = null;
     },
     initializeAuth: (state) => {
-      const token = localStorage.getItem('auth_token');
-      const userData = localStorage.getItem('user_data');
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const userData = localStorage.getItem(STORAGE_KEYS.USER_DATA);
       
       if (token && userData) {
         try {
@@ -137,8 +143,9 @@ const authSlice = createSlice({
           state.isAuthenticated = true;
         } catch (error) {
           // Clear invalid data
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user_data');
+          localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+          localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+          localStorage.removeItem(STORAGE_KEYS.ADMIN_ID);
         }
       }
     },

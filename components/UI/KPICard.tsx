@@ -6,8 +6,8 @@ import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 interface KPICardProps {
   title: string;
   value: string;
-  trend: string;
-  trendType: 'up' | 'down';
+  trend?: string;
+  trendType?: 'up' | 'down';
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
@@ -45,18 +45,20 @@ const KPICard: React.FC<KPICardProps> = ({
           <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
             {value}
           </p>
-          <div className="flex items-center mt-2">
-            {trendType === 'up' ? (
-              <FiTrendingUp className="w-4 h-4 mr-1 text-green-500" />
-            ) : (
-              <FiTrendingDown className="w-4 h-4 mr-1 text-red-500" />
-            )}
-            <span className={`text-xs sm:text-sm font-medium ${
-              trendType === 'up' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {trend}
-            </span>
-          </div>
+          {trend && trendType && (
+            <div className="flex items-center mt-2">
+              {trendType === 'up' ? (
+                <FiTrendingUp className="w-4 h-4 mr-1 text-green-500" />
+              ) : (
+                <FiTrendingDown className="w-4 h-4 mr-1 text-red-500" />
+              )}
+              <span className={`text-xs sm:text-sm font-medium ${
+                trendType === 'up' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {trend}
+              </span>
+            </div>
+          )}
         </div>
         <div className={`ml-4 p-2 sm:p-3 rounded-lg shadow ${iconBg}`}>
           <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`} />
