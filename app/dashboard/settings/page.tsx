@@ -3,10 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   FiUser, 
-  FiShield, 
-  FiBell, 
-  FiGlobe, 
-  FiDatabase
+  FiShield
 } from 'react-icons/fi';
 import Sidebar from '../../../components/UI/Sidebar';
 import Header from '../../../components/UI/Header';
@@ -16,8 +13,7 @@ import { COLORS } from '@/constants';
 import { 
   useAdminProfile, 
   useUpdateAdminProfile, 
-  useChangeAdminPassword, 
-  useExportAdminData 
+  useChangeAdminPassword
 } from '../../../hooks/useAdminApi';
 import { toast } from 'react-hot-toast';
 
@@ -27,10 +23,9 @@ const Settings: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // API hooks
-  const { data: adminProfile, isLoading: isProfileLoading, refetch: refetchProfile } = useAdminProfile();
+  const { data: adminProfile, isLoading: isProfileLoading } = useAdminProfile();
   const updateProfileMutation = useUpdateAdminProfile();
   const changePasswordMutation = useChangeAdminPassword();
-  const exportDataMutation = useExportAdminData();
 
   // Form states
   const [profileData, setProfileData] = useState({
@@ -48,12 +43,6 @@ const Settings: React.FC = () => {
     twoFactorEnabled: true
   });
 
-  const [notificationData, setNotificationData] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
-    weeklyReports: true,
-    securityAlerts: true
-  });
 
   // Load profile data from API
   useEffect(() => {
@@ -106,28 +95,18 @@ const Settings: React.FC = () => {
         // For other tabs, just show success message
         toast.success('Settings saved successfully');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save settings');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save settings';
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleExportData = async () => {
-    try {
-      await exportDataMutation.mutateAsync();
-      toast.success('Data export initiated. Download will start shortly.');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to export data');
-    }
-  };
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: FiUser },
-    { id: 'security', label: 'Security', icon: FiShield },
-    { id: 'notifications', label: 'Notifications', icon: FiBell },
-    { id: 'preferences', label: 'Preferences', icon: FiGlobe },
-    { id: 'data', label: 'Data & Privacy', icon: FiDatabase }
+    { id: 'security', label: 'Security', icon: FiShield }
   ];
 
   const renderProfileTab = () => {
@@ -242,99 +221,8 @@ const Settings: React.FC = () => {
     </div>
   );
 
-  const renderNotificationsTab = () => (
-    <div className="space-y-4">
-      {Object.entries(notificationData).map(([key, value]) => (
-        <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <div>
-            <h3 className="text-sm font-medium text-gray-900">
-              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-            </h3>
-            <p className="text-sm text-gray-500">
-              Receive notifications for {key.toLowerCase().replace(/([A-Z])/g, ' $1')}
-            </p>
-          </div>
-          <button
-            onClick={() => setNotificationData({ ...notificationData, [key]: !value })}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              value ? '' : 'bg-gray-200'
-            }`}
-            style={{ backgroundColor: value ? COLORS.PRIMARY.BLUE : undefined }}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                value ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-      ))}
-    </div>
-  );
 
-  const renderPreferencesTab = () => (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Language
-        </label>
-        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}>
-          <option value="en">English</option>
-          <option value="es">Spanish</option>
-          <option value="fr">French</option>
-          <option value="de">German</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Theme
-        </label>
-        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="auto">Auto</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Date Format
-        </label>
-        <select className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]" style={{ '--ring-color': COLORS.PRIMARY.LIGHT_BLUE } as React.CSSProperties}>
-          <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-          <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-          <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-        </select>
-      </div>
-    </div>
-  );
 
-  const renderDataTab = () => (
-    <div className="space-y-6">
-      <div className="p-4 rounded-lg" style={{ backgroundColor: '#EDF3F7' }}>
-        <h3 className="text-sm font-medium mb-2" style={{ color: COLORS.PRIMARY.DARK_BLUE }}>Data Export</h3>
-        <p className="text-sm mb-4" style={{ color: COLORS.PRIMARY.LIGHT_BLUE }}>
-          Download a copy of your data including profile information, activity logs, and preferences.
-        </p>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleExportData}
-          loading={exportDataMutation.isPending}
-        >
-          {exportDataMutation.isPending ? 'Exporting...' : 'Export Data'}
-        </Button>
-      </div>
-      <div className="p-4 bg-red-50 rounded-lg">
-        <h3 className="text-sm font-medium text-red-900 mb-2">Delete Account</h3>
-        <p className="text-sm text-red-700 mb-4">
-          Permanently delete your account and all associated data. This action cannot be undone.
-        </p>
-        <Button variant="danger" size="sm">
-          Delete Account
-        </Button>
-      </div>
-    </div>
-  );
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -342,12 +230,6 @@ const Settings: React.FC = () => {
         return renderProfileTab();
       case 'security':
         return renderSecurityTab();
-      case 'notifications':
-        return renderNotificationsTab();
-      case 'preferences':
-        return renderPreferencesTab();
-      case 'data':
-        return renderDataTab();
       default:
         return renderProfileTab();
     }
