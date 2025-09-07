@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { FiEye, FiEdit, FiUserCheck, FiMail, FiSlash, FiRotateCcw } from 'react-icons/fi';
+import React, { useState, useRef, useEffect } from 'react';
+import { FiEye, FiEdit, FiUserCheck, FiMail, FiSlash, FiRotateCcw, FiMoreVertical } from 'react-icons/fi';
 import { UserTableData, EditUserFormData } from '@/types';
 import { COLORS } from '@/constants';
 import Modal from './Modal';
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 interface UserTableProps {
   users: UserTableData[];
-  onAction: (userId: string, action?: string, data?: any) => void;
+  onAction: (userId: string, action?: string, data?: EditUserFormData) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
@@ -24,16 +24,90 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageSubject, setMessageSubject] = useState('');
   const [messageBody, setMessageBody] = useState('');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [editForm, setEditForm] = useState<EditUserFormData>({
     name: '',
     email: '',
     status: 'Active',
-    role: 'Patient',
-    location: ''
+    location: '',
+    phone: '',
+    gender: '',
+    country: '',
+    city: '',
+    address: '',
+    postalCode: '',
+    specialization: '',
+    therapyField: '',
+    title: '',
+    experience: '',
+    consultationFee: ''
   });
   const router = useRouter();
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      let clickedInside = false;
+      
+      dropdownRefs.current.forEach((ref) => {
+        if (ref && ref.contains(target)) {
+          clickedInside = true;
+        }
+      });
+      
+      if (!clickedInside) {
+        setOpenDropdown(null);
+      }
+    };
 
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const setDropdownRef = (userId: string) => (ref: HTMLDivElement | null) => {
+    if (ref) {
+      dropdownRefs.current.set(userId, ref);
+    } else {
+      dropdownRefs.current.delete(userId);
+    }
+  };
+
+  const toggleDropdown = (userId: string) => {
+    setOpenDropdown(openDropdown === userId ? null : userId);
+  };
+
+  const handleActionClick = (userId: string, action: string) => {
+    setOpenDropdown(null);
+    // Handle the action here
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      switch (action) {
+        case 'view':
+          router.push(`/dashboard/user-management/${encodeURIComponent(userId)}`);
+          break;
+        case 'edit':
+          handleEditUser(user);
+          break;
+        case 'verify':
+          handleVerifyTherapist(user);
+          break;
+        case 'suspend':
+          handleSuspend(user);
+          break;
+        case 'reset':
+          handleResetPassword(user);
+          break;
+        case 'message':
+          setSelectedUser(user);
+          setShowMessageModal(true);
+          break;
+      }
+    }
+  };
 
   const handleEditUser = (user: UserTableData) => {
     setSelectedUser(user);
@@ -41,8 +115,18 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
       name: user.name,
       email: user.email,
       status: user.status,
-      role: user.role || 'Patient',
-      location: user.location || ''
+      location: user.location || '',
+      phone: user.phone || '',
+      gender: user.gender || '',
+      country: user.country || '',
+      city: user.city || '',
+      address: user.address || '',
+      postalCode: user.postalCode || '',
+      specialization: user.specialization || '',
+      therapyField: user.therapyField || '',
+      title: user.title || '',
+      experience: user.experience || '',
+      consultationFee: user.consultationFee || ''
     });
     setShowEditModal(true);
   };
@@ -116,93 +200,124 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 <span className="text-gray-500">Location:</span>
                 <span className="ml-1 font-medium text-gray-900">{user.location || '—'}</span>
               </div>
+              <div>
+                <span className="text-gray-500">
+                  {user.role === 'Therapist' ? 'Specialization:' : 'Gender:'}
+                </span>
+                <span className="ml-1 font-medium text-gray-900">
+                  {user.role === 'Therapist' 
+                    ? (user.specialization || '—')
+                    : (user.gender || '—')
+                  }
+                </span>
+              </div>
+              {user.role === 'Therapist' && user.rating && (
+                <div>
+                  <span className="text-gray-500">Rating:</span>
+                  <span className="ml-1 font-medium text-gray-900">{user.rating}/5</span>
+                </div>
+              )}
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                onClick={() => router.push(`/dashboard/user-management/${encodeURIComponent(user.id)}`)}
-                className="p-2 rounded-md transition-colors cursor-pointer text-[#3C5671] hover:opacity-80 hover:bg-[#3C5671]/10"
-                title="View Details"
-                aria-label="View user details"
-              >
-                <FiEye className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleEditUser(user)}
-                className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors cursor-pointer"
-                title="Edit User"
-                aria-label="Edit user"
-              >
-                <FiEdit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleSuspend(user)}
-                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
-                title="Suspend/Ban"
-                aria-label="Suspend/Ban user"
-              >
-                <FiSlash className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleResetPassword(user)}
-                className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-md transition-colors cursor-pointer"
-                title="Reset Password"
-                aria-label="Reset password"
-              >
-                <FiRotateCcw className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleVerifyTherapist(user)}
-                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
-                title="Verify Therapist"
-                aria-label="Verify therapist"
-              >
-                <FiUserCheck className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => { setSelectedUser(user); setShowMessageModal(true); }}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
-                title="Send Message"
-                aria-label="Send message"
-              >
-                <FiMail className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="mt-3">
+            <div className="mt-3 flex justify-between items-center">
               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(user.status)}`}>
                 {user.status}
               </span>
+              <div className="relative" ref={setDropdownRef(user.id)}>
+                <button
+                  onClick={() => toggleDropdown(user.id)}
+                  className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
+                  title="Actions"
+                  aria-label="User actions"
+                >
+                  <FiMoreVertical className="w-4 h-4" />
+                </button>
+                
+                {openDropdown === user.id && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleActionClick(user.id, 'view')}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FiEye className="w-4 h-4 mr-3" />
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => handleActionClick(user.id, 'edit')}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FiEdit className="w-4 h-4 mr-3" />
+                        Edit User
+                      </button>
+                      {user.role === 'Therapist' && (
+                        <button
+                          onClick={() => handleActionClick(user.id, 'verify')}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FiUserCheck className="w-4 h-4 mr-3" />
+                          Verify Therapist
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleActionClick(user.id, 'suspend')}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FiSlash className="w-4 h-4 mr-3" />
+                        Suspend/Ban
+                      </button>
+                      <button
+                        onClick={() => handleActionClick(user.id, 'reset')}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FiRotateCcw className="w-4 h-4 mr-3" />
+                        Reset Password
+                      </button>
+                      <button
+                        onClick={() => handleActionClick(user.id, 'message')}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FiMail className="w-4 h-4 mr-3" />
+                        Send Message
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden lg:block overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="hidden lg:block">
+        <table className="w-full divide-y divide-gray-200 table-fixed">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-20 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 User ID
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-40 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-28 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Location
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-32 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Specialization/Details
+              </th>
+              <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Last Login
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-16 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -210,79 +325,96 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user, index) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-4 text-sm font-medium text-gray-900 truncate">
                   {user.id}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-4 text-sm text-gray-900 truncate">
                   {user.name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-4 text-sm text-gray-900 truncate">
                   {user.email}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-4 text-sm text-gray-900 truncate">
                   {user.role || '—'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-4 text-sm text-gray-900 truncate">
                   {user.location || '—'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-4 text-sm text-gray-900 truncate">
+                  {user.role === 'Therapist' 
+                    ? (user.specialization || '—')
+                    : (user.gender || '—')
+                  }
+                </td>
+                <td className="px-3 py-4 text-sm text-gray-900 truncate">
                   {user.lastLogin}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-4">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(user.status)}`}>
                     {user.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
+                <td className="px-3 py-4 text-sm font-medium">
+                  <div className="relative" ref={setDropdownRef(user.id)}>
                     <button
-                      onClick={() => router.push(`/dashboard/user-management/${encodeURIComponent(user.id)}`)}
-                      className="p-2 rounded-md transition-colors cursor-pointer text-[#3C5671] hover:opacity-80 hover:bg-[#3C5671]/10"
-                      title="View Details"
-                      aria-label="View user details"
-                    >
-                      <FiEye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleEditUser(user)}
-                      className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors cursor-pointer"
-                      title="Edit User"
-                      aria-label="Edit user"
-                    >
-                      <FiEdit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleSuspend(user)}
-                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
-                      title="Suspend/Ban"
-                      aria-label="Suspend/Ban user"
-                    >
-                      <FiSlash className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleResetPassword(user)}
-                      className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-md transition-colors cursor-pointer"
-                      title="Reset Password"
-                      aria-label="Reset password"
-                    >
-                      <FiRotateCcw className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleVerifyTherapist(user)}
-                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
-                      title="Verify Therapist"
-                      aria-label="Verify therapist"
-                    >
-                      <FiUserCheck className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => { setSelectedUser(user); setShowMessageModal(true); }}
+                      onClick={() => toggleDropdown(user.id)}
                       className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
-                      title="Send Message"
-                      aria-label="Send message"
+                      title="Actions"
+                      aria-label="User actions"
                     >
-                      <FiMail className="w-4 h-4" />
+                      <FiMoreVertical className="w-4 h-4" />
                     </button>
+                    
+                    {openDropdown === user.id && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleActionClick(user.id, 'view')}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FiEye className="w-4 h-4 mr-3" />
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => handleActionClick(user.id, 'edit')}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FiEdit className="w-4 h-4 mr-3" />
+                            Edit User
+                          </button>
+                          {user.role === 'Therapist' && (
+                            <button
+                              onClick={() => handleActionClick(user.id, 'verify')}
+                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <FiUserCheck className="w-4 h-4 mr-3" />
+                              Verify Therapist
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleActionClick(user.id, 'suspend')}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FiSlash className="w-4 h-4 mr-3" />
+                            Suspend/Ban
+                          </button>
+                          <button
+                            onClick={() => handleActionClick(user.id, 'reset')}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FiRotateCcw className="w-4 h-4 mr-3" />
+                            Reset Password
+                          </button>
+                          <button
+                            onClick={() => handleActionClick(user.id, 'message')}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FiMail className="w-4 h-4 mr-3" />
+                            Send Message
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -296,20 +428,22 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
       <Modal
         isOpen={showEditModal}
         onClose={closeModal}
-        title="Edit User"
+        title={`Edit ${selectedUser?.role || 'User'}`}
       >
         {selectedUser && (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-96 overflow-y-auto">
             <div>
               <label className="block text-sm font-medium text-gray-700">User ID</label>
               <p className="mt-1 text-sm text-gray-500">{selectedUser.id}</p>
             </div>
+            
             <Input
               label="Name"
               value={editForm.name}
               onChange={(value) => setEditForm({ ...editForm, name: value })}
               placeholder="Enter user name"
             />
+            
             <Input
               type="email"
               label="Email"
@@ -317,26 +451,112 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
               onChange={(value) => setEditForm({ ...editForm, email: value })}
               placeholder="Enter email address"
             />
+            
+            <Input
+              label="Phone"
+              value={(editForm.phone as string) || ''}
+              onChange={(value) => setEditForm({ ...editForm, phone: value })}
+              placeholder="Enter phone number"
+            />
+            
             <div>
-              <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
-              <select
-                id="edit-role"
-                value={editForm.role}
-                onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'Therapist' | 'Patient' })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
-              >
-                <option>Therapist</option>
-                <option>Patient</option>
-              </select>
+              <label className="block text-sm font-medium text-gray-700">Role</label>
+              <p className="mt-1 text-sm text-gray-500">{selectedUser.role || '—'}</p>
             </div>
+            
             <Input
               label="Location"
-              value={editForm.location || ''}
+              value={(editForm.location as string) || ''}
               onChange={(value) => setEditForm({ ...editForm, location: value })}
               placeholder="Enter location"
             />
+            
+            <Input
+              label="Country"
+              value={(editForm.country as string) || ''}
+              onChange={(value) => setEditForm({ ...editForm, country: value })}
+              placeholder="Enter country"
+            />
+            
+            <Input
+              label="City"
+              value={(editForm.city as string) || ''}
+              onChange={(value) => setEditForm({ ...editForm, city: value })}
+              placeholder="Enter city"
+            />
+            
+            <Input
+              label="Address"
+              value={(editForm.address as string) || ''}
+              onChange={(value) => setEditForm({ ...editForm, address: value })}
+              placeholder="Enter address"
+            />
+            
+            <Input
+              label="Postal Code"
+              value={(editForm.postalCode as string) || ''}
+              onChange={(value) => setEditForm({ ...editForm, postalCode: value })}
+              placeholder="Enter postal code"
+            />
+            
+            <div>
+              <label htmlFor="edit-gender" className="block text-sm font-medium text-gray-700">
+                Gender
+              </label>
+              <select
+                id="edit-gender"
+                value={(editForm.gender as string) || ''}
+                onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
+                style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Therapist-specific fields */}
+            {selectedUser.role === 'Therapist' && (
+              <>
+                <Input
+                  label="Title"
+                  value={(editForm.title as string) || ''}
+                  onChange={(value) => setEditForm({ ...editForm, title: value })}
+                  placeholder="e.g., Dr., Prof."
+                />
+                
+                <Input
+                  label="Specialization"
+                  value={(editForm.specialization as string) || ''}
+                  onChange={(value) => setEditForm({ ...editForm, specialization: value })}
+                  placeholder="e.g., Clinical Psychology"
+                />
+                
+                <Input
+                  label="Therapy Field"
+                  value={(editForm.therapyField as string) || ''}
+                  onChange={(value) => setEditForm({ ...editForm, therapyField: value })}
+                  placeholder="e.g., Cognitive Behavioral Therapy"
+                />
+                
+                <Input
+                  label="Experience (years)"
+                  value={(editForm.experience as string) || ''}
+                  onChange={(value) => setEditForm({ ...editForm, experience: value })}
+                  placeholder="Enter years of experience"
+                />
+                
+                <Input
+                  label="Consultation Fee"
+                  value={(editForm.consultationFee as string) || ''}
+                  onChange={(value) => setEditForm({ ...editForm, consultationFee: value })}
+                  placeholder="Enter consultation fee"
+                />
+              </>
+            )}
+            
             <div>
               <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700">
                 Status
@@ -353,6 +573,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 <option value="Pending Verification">Pending Verification</option>
               </select>
             </div>
+            
             <div className="flex justify-end space-x-3 pt-4">
               <Button variant="secondary" onClick={closeModal}>
                 Cancel

@@ -21,7 +21,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const dispatch = useAppDispatch();
-  const { user: authUser, isAuthenticated, isLoading, error } = useAppSelector((state) => state.auth);
+  const { user: authUser, isLoading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     // Initialize auth state from localStorage

@@ -153,7 +153,7 @@ The project uses strict TypeScript configuration with path aliases:
 - User listing with search functionality
 - User details modal
 - Edit user information
-- Status management (Restricted/Unrestricted)
+- Status management (Active/Restricted/Pending Verification)
 
 ### Reporting
 - Report generation

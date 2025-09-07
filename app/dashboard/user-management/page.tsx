@@ -7,14 +7,15 @@ import UserTable from '../../../components/UI/UserTable';
 import SearchBar from '../../../components/UI/SearchBar';
 import Dropdown from '../../../components/UI/Dropdown';
 import LoadingSpinner from '../../../components/UI/LoadingSpinner';
-import { UserTableData } from '@/types';
-import { USERS } from '@/data/users';
+import { UserTableData, EditUserFormData } from '@/types';
+import { User } from '@/lib/api/admin';
 import { COLORS } from '@/constants';
 import { useSearchParams } from 'next/navigation';
 import { 
   useSearchTherapists, 
   useSearchPatients, 
   useAllPatients,
+  useAllTherapists,
   useVerifyTherapist,
   useSuspendUser,
   useResetUserPassword,
@@ -32,16 +33,17 @@ const UserManagement: React.FC = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const searchParams = useSearchParams();
 
-  // API hooks
+  // API hooks - Get all users (both therapists and patients)
   const { data: therapists, isLoading: isTherapistsLoading } = useSearchTherapists(
     searchTerm, 
-    searchTerm.length > 0 && roleFilter === 'Therapist'
+    searchTerm.length > 0 && (roleFilter === 'Therapist' || roleFilter === 'All')
   );
   const { data: patients, isLoading: isPatientsLoading } = useSearchPatients(
     searchTerm, 
-    searchTerm.length > 0 && roleFilter === 'Patient'
+    searchTerm.length > 0 && (roleFilter === 'Patient' || roleFilter === 'All')
   );
   const { data: allPatients, isLoading: isAllPatientsLoading } = useAllPatients();
+  const { data: allTherapists, isLoading: isAllTherapistsLoading } = useAllTherapists();
 
   // Mutation hooks
   const verifyTherapistMutation = useVerifyTherapist();
@@ -50,7 +52,9 @@ const UserManagement: React.FC = () => {
   const sendMessageMutation = useSendMessageToUser();
   const updateUserMutation = useUpdateUser();
 
-  const isLoading = isTherapistsLoading || isPatientsLoading || isAllPatientsLoading;
+  // Only show full-screen loading for initial data loading, not for search
+  const isLoading = isAllPatientsLoading || isAllTherapistsLoading;
+  const isSearching = isTherapistsLoading || isPatientsLoading;
 
   // Hydrate filters from URL
   useEffect(() => {
@@ -60,62 +64,94 @@ const UserManagement: React.FC = () => {
     if (role) setRoleFilter(role);
   }, [searchParams]);
 
+  // Helper function to map therapist data to UserTableData
+  const mapTherapistToUserTable = (therapist: User): UserTableData => {
+    const therapistData = therapist as User & {
+      specialization?: string;
+      therapyField?: string;
+      title?: string;
+      experience?: string;
+      consultationFee?: string;
+    };
+    
+    return {
+      id: therapistData.id || '',
+      name: therapistData.fullName || '',
+      email: therapistData.email || '',
+      lastLogin: therapistData.lastLogin || 'Never',
+      status: therapistData.active === 'true' ? 'Active' as const : 'Restricted' as const,
+      role: 'Therapist' as const,
+      location: therapistData.city || 'Unknown',
+      phone: therapistData.phone || 'N/A',
+      verificationStatus: therapistData.verificationStatus === 'verified' ? 'Verified' as const : 'Pending' as const,
+      rating: therapistData.rating || 0,
+      reviewsCount: therapistData.reviewsCount || 0,
+      specialization: therapistData.specialization || 'General',
+      therapyField: therapistData.therapyField || 'Not specified',
+      title: therapistData.title || 'Therapist',
+      experience: therapistData.experience || 'Not specified',
+      consultationFee: therapistData.consultationFee || 'Not specified',
+      activity: {
+        bookings: 0,
+        cancellations: 0,
+      }
+    };
+  };
+
+  // Helper function to map patient data to UserTableData
+  const mapPatientToUserTable = (patient: User): UserTableData => {
+    const patientData = patient as User & {
+      address?: string;
+      postalCode?: string;
+    };
+    
+    return {
+      id: patientData.id || '',
+      name: patientData.fullName || '',
+      email: patientData.email || '',
+      lastLogin: patientData.lastLogin || 'Never',
+      status: patientData.active === 'true' ? 'Active' as const : 'Restricted' as const,
+      role: 'Patient' as const,
+      location: patientData.city || 'Unknown',
+      phone: patientData.phone || 'N/A',
+      gender: patientData.gender || 'Not specified',
+      country: patientData.country || 'Not specified',
+      address: patientData.address || 'Not specified',
+      postalCode: patientData.postalCode || 'Not specified',
+      activity: {
+        bookings: 0,
+        cancellations: 0,
+      }
+    };
+  };
+
   const filteredUsers = useMemo(() => {
     let list: UserTableData[] = [];
 
     // Get data based on search and role filter
     if (searchTerm.length > 0) {
+      // Search mode - get specific results
       if (roleFilter === 'Therapist' && therapists) {
-        list = therapists.map(user => ({
-          id: user.id,
-          name: user.fullName,
-          email: user.email,
-          lastLogin: user.lastLogin || 'Never',
-          status: user.active === 'true' ? 'Active' : 'Restricted',
-          role: 'Therapist' as const,
-          location: user.city || 'Unknown',
-          phone: user.phone,
-          verificationStatus: user.verificationStatus === 'verified' ? 'Verified' : 'Pending',
-          rating: user.rating,
-          reviewsCount: user.reviewsCount,
-          activity: {
-            bookings: 0,
-            cancellations: 0,
-          }
-        }));
+        list = therapists.map(mapTherapistToUserTable);
       } else if (roleFilter === 'Patient' && patients) {
-        list = patients.map(user => ({
-          id: user.id,
-          name: user.fullName,
-          email: user.email,
-          lastLogin: user.lastLogin || 'Never',
-          status: user.active === 'true' ? 'Active' : 'Restricted',
-          role: 'Patient' as const,
-          location: user.city || 'Unknown',
-          phone: user.phone,
-          activity: {
-            bookings: 0,
-            cancellations: 0,
-          }
-        }));
+        list = patients.map(mapPatientToUserTable);
+      } else if (roleFilter === 'All') {
+        // Search both therapists and patients when role filter is 'All'
+        const therapistList = therapists ? therapists.map(mapTherapistToUserTable) : [];
+        const patientList = patients ? patients.map(mapPatientToUserTable) : [];
+        list = [...therapistList, ...patientList];
       }
     } else {
-      // Show all patients when no search term
-      if (allPatients) {
-        list = allPatients.map(user => ({
-          id: user.id,
-          name: user.fullName,
-          email: user.email,
-          lastLogin: user.lastLogin || 'Never',
-          status: user.active === 'true' ? 'Active' : 'Restricted',
-          role: 'Patient' as const,
-          location: user.city || 'Unknown',
-          phone: user.phone,
-          activity: {
-            bookings: 0,
-            cancellations: 0,
-          }
-        }));
+      // No search term - show all users based on role filter
+      if (roleFilter === 'All') {
+        // Combine all therapists and patients using separate APIs
+        const therapistList = allTherapists ? allTherapists.map(mapTherapistToUserTable) : [];
+        const patientList = allPatients ? allPatients.map(mapPatientToUserTable) : [];
+        list = [...therapistList, ...patientList];
+      } else if (roleFilter === 'Therapist' && allTherapists) {
+        list = allTherapists.map(mapTherapistToUserTable);
+      } else if (roleFilter === 'Patient' && allPatients) {
+        list = allPatients.map(mapPatientToUserTable);
       }
     }
 
@@ -136,9 +172,9 @@ const UserManagement: React.FC = () => {
     });
 
     return list;
-  }, [therapists, patients, allPatients, searchTerm, roleFilter, statusFilter, locationFilter, sortBy, sortDir]);
+  }, [therapists, patients, allPatients, allTherapists, searchTerm, roleFilter, statusFilter, locationFilter, sortBy, sortDir]);
 
-  const handleAction = async (userId: string, action?: string, data?: any) => {
+  const handleAction = async (userId: string, action?: string, data?: EditUserFormData) => {
     console.log('handleAction called with:', { userId, action });
     const user = filteredUsers.find(u => u.id === userId);
     if (!user) {
@@ -195,13 +231,14 @@ const UserManagement: React.FC = () => {
           // Use the form data passed from the UserTable component
           const updatedUserData = {
             id: userId,
-            fullName: data.name || user.name,
-            email: data.email || user.email,
-            phone: data.phone || user.phone || '',
-            city: data.location || user.location || '',
-            country: '', // Not available in current data structure
-            gender: '', // Not available in current data structure
-            active: data.status === 'Active' ? 'true' : 'false'
+            fullName: data?.name || user.name,
+            email: data?.email || user.email,
+            phone: data?.phone || user.phone || '',
+            city: data?.location || user.location || '',
+            country: data?.country || user.country || '',
+            gender: data?.gender || user.gender || '',
+            active: data?.status === 'Active' ? 'true' : 'false',
+            userType: user.role?.toLowerCase() as 'therapist' | 'patient'
           };
           
           await updateUserMutation.mutateAsync(updatedUserData);
@@ -242,7 +279,14 @@ const UserManagement: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 border border-gray-200">
             <div className="flex flex-wrap items-end gap-4">
               <div className="w-full sm:flex-1 min-w-0">
-                <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Search users..." />
+                <div className="relative">
+                  <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Search users..." />
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <LoadingSpinner size="sm" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="w-full sm:w-44 min-w-0">
                 <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
@@ -306,7 +350,12 @@ const UserManagement: React.FC = () => {
                 />
               </div>
               <div className="w-full sm:flex-1 min-w-0 flex items-center justify-start sm:justify-end">
-                <span className="text-sm text-gray-600 mt-1 sm:mt-0">{filteredUsers.length} users</span>
+                <div className="flex items-center gap-2">
+                  {isSearching && <LoadingSpinner size="sm" />}
+                  <span className="text-sm text-gray-600 mt-1 sm:mt-0">
+                    {filteredUsers.length} users
+                  </span>
+                </div>
               </div>
             </div>
           </div>

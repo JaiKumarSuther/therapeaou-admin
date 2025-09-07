@@ -43,7 +43,7 @@ apiClient.interceptors.response.use(
 );
 
 // Generic API response type
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -80,23 +80,33 @@ class ApiService {
       return {
         success: true,
         data: response.data,
-        message: (response.data as any)?.message,
+        message: (response.data as Record<string, unknown>)?.message as string,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Log error details
+      const axiosError = error as { 
+        message?: string; 
+        response?: { 
+          status?: number; 
+          statusText?: string; 
+          data?: { message?: string } 
+        }; 
+        config?: { url?: string; data?: unknown } 
+      };
+      
       console.error('❌ API Error:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        url: error.config?.url,
-        requestData: error.config?.data ? JSON.stringify(error.config.data, null, 2) : 'No data',
-        responseData: error.response?.data ? JSON.stringify(error.response.data, null, 2) : 'No response data',
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        url: axiosError.config?.url,
+        requestData: axiosError.config?.data ? JSON.stringify(axiosError.config.data, null, 2) : 'No data',
+        responseData: axiosError.response?.data ? JSON.stringify(axiosError.response.data, null, 2) : 'No response data',
         fullError: error
       });
 
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'An error occurred',
+        error: axiosError.response?.data?.message || axiosError.message || 'An error occurred',
       };
     }
   }
@@ -107,12 +117,12 @@ class ApiService {
   }
 
   // POST request
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, method: 'POST', url, data });
   }
 
   // PUT request
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, method: 'PUT', url, data });
   }
 
@@ -122,7 +132,7 @@ class ApiService {
   }
 
   // PATCH request
-  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     return this.request<T>({ ...config, method: 'PATCH', url, data });
   }
 }

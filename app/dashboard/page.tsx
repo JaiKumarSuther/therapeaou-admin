@@ -16,15 +16,9 @@ import { ActivityItem, KPIData } from '@/types';
 import { COLORS } from '@/constants';
 import { useRouter } from 'next/navigation';
 import { 
-  useDashboardData, 
   useNewRegisteredUsers, 
-  useTotalPremium, 
-  useTotalPlatinum,
-  useTotalUsers,
   useTotalTherapists,
-  useTotalPatients,
   useTotalRevenue,
-  useMonthlyRevenue,
   useRecentActivity
 } from '../../hooks/useAdminApi';
 
@@ -34,20 +28,12 @@ const Dashboard: React.FC = () => {
   const router = useRouter();
 
   // Fetch dashboard data using React Query hooks
-  const { data: dashboardData, isLoading: isDashboardLoading } = useDashboardData();
   const { data: newRegisteredUsers, isLoading: isNewUsersLoading } = useNewRegisteredUsers();
-  const { data: totalPremium, isLoading: isPremiumLoading } = useTotalPremium();
-  const { data: totalPlatinum, isLoading: isPlatinumLoading } = useTotalPlatinum();
-  const { data: totalUsers, isLoading: isUsersLoading } = useTotalUsers();
   const { data: totalTherapists, isLoading: isTherapistsLoading } = useTotalTherapists();
-  const { data: totalPatients, isLoading: isPatientsLoading } = useTotalPatients();
   const { data: totalRevenue, isLoading: isRevenueLoading } = useTotalRevenue();
-  const { data: monthlyRevenue, isLoading: isMonthlyRevenueLoading } = useMonthlyRevenue();
-  const { data: recentActivity, isLoading: isActivityLoading } = useRecentActivity(10);
+  const { data: recentActivity } = useRecentActivity(10);
 
-  const isLoading = isDashboardLoading || isNewUsersLoading || isPremiumLoading || 
-                   isPlatinumLoading || isUsersLoading || isTherapistsLoading || 
-                   isPatientsLoading || isRevenueLoading || isMonthlyRevenueLoading;
+  const isLoading = isNewUsersLoading || isTherapistsLoading || isRevenueLoading;
 
   const kpiData: KPIData[] = useMemo(() => [
     {
@@ -95,14 +81,28 @@ const Dashboard: React.FC = () => {
   const activities: ActivityItem[] = useMemo(() => {
     if (recentActivity && recentActivity.length > 0) {
       console.log('Using API data for recent activity:', recentActivity);
-      return recentActivity.map(activity => ({
-        id: activity.id,
-        type: activity.type,
-        description: activity.description,
-        createdAt: activity.createdAt,
-        actor: activity.actor,
-        meta: activity.meta
-      }));
+      return recentActivity.map((activity, index) => {
+        // Create a flexible mapping that handles any activity structure
+        const mappedActivity: ActivityItem = {
+          id: activity.id || `activity-${index}`,
+          type: activity.type || 'unknown',
+          description: activity.description || activity.message || 'Activity occurred',
+          createdAt: activity.createdAt || activity.timestamp || new Date().toISOString(),
+          actor: activity.actor,
+          meta: {
+            ...activity.meta,
+            // Include any additional fields from the API response
+            ...Object.keys(activity).reduce((acc, key) => {
+              if (!['id', 'type', 'description', 'message', 'createdAt', 'timestamp', 'actor', 'meta'].includes(key)) {
+                acc[key] = activity[key];
+              }
+              return acc;
+            }, {} as Record<string, unknown>)
+          }
+        };
+        
+        return mappedActivity;
+      });
     }
     
     // Return empty array when no real data is available

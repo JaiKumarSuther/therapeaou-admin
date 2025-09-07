@@ -6,7 +6,6 @@ import { FiEye, FiEyeOff, FiMail, FiLock } from 'react-icons/fi';
 import { useAuth } from './context/AuthContext';
 import { LoginFormData } from '@/types';
 import { validateEmail } from '@/utils';
-import { ERROR_MESSAGES } from '@/constants';
 import Button from './UI/Button';
 import Input from './UI/Input';
 
@@ -21,8 +20,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp, onCre
   const { login } = useAuth();
   
   const [formData, setFormData] = useState<LoginFormData>({
-    email: 'iamjaisuthar@gmail.com',
-    password: 'admin123',
+    email: '',
+    password: '',
     rememberMe: false,
   });
   

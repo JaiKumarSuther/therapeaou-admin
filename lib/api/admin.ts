@@ -85,20 +85,31 @@ export interface FinancialActivityReport {
 }
 
 export interface ReportHistoryItem {
-  id: string;
-  type: 'Therapist Activity' | 'Patient Activity' | 'Financial Activity';
-  createdAt: string;
-  createdBy: string;
+  id: string | number;
+  type?: string; // Allow any report type
+  reportType?: string; // Alternative field name from API
+  createdAt?: string;
+  generatedAt?: string; // Alternative field name from API
+  createdBy?: string;
+  generatedBy?: string; // Alternative field name from API
   fileUrl?: string;
+  status?: string; // Additional field from API
+  // Allow any additional fields that might come from the API
+  [key: string]: unknown;
 }
 
 export interface RecentActivity {
-  id: string;
-  type: 'registration' | 'therapist_verification' | 'restriction_change' | 'payment' | 'dispute';
-  description: string;
-  createdAt: string;
+  id?: string;
+  type?: string; // Allow any activity type
+  description?: string;
+  message?: string; // Alternative field name from API
+  createdAt?: string;
+  timestamp?: string; // Alternative field name from API
   actor?: string;
-  meta?: Record<string, any>;
+  userId?: number; // User ID from API response
+  meta?: Record<string, unknown>;
+  // Allow any additional fields that might come from the API
+  [key: string]: unknown;
 }
 
 export interface UserStats {
@@ -173,6 +184,7 @@ export class AdminApiService {
     return apiService.get('/admin/total-therapists');
   }
 
+
   async getTotalPatients(): Promise<ApiResponse<number>> {
     return apiService.get('/admin/total-patients');
   }
@@ -185,11 +197,93 @@ export class AdminApiService {
     return apiService.get('/admin/monthly-revenue');
   }
 
-  // User Management
+  // User Management - Therapists
   async searchTherapists(query: string): Promise<ApiResponse<User[]>> {
     return apiService.get(`/admin/search-therapist/${encodeURIComponent(query)}`);
   }
 
+  async getTherapistById(id: string): Promise<ApiResponse<User>> {
+    // Using search endpoint to get therapist by ID
+    return apiService.get(`/admin/search-therapist/${id}`);
+  }
+
+  async getAllTherapists(): Promise<ApiResponse<User[]>> {
+    return apiService.get('/therapist/get-all');
+  }
+
+  async createTherapist(data: {
+    fullName: string;
+    email: string;
+    password: string;
+    phoneNumber: string;
+    title: string;
+    specialization: string;
+    therapyField: string;
+    gender: string;
+    country: string;
+    city: string;
+    postalCode: string;
+    address: string;
+    experience: string;
+    consultationFee: string;
+    profileImg?: File;
+    highestDegree?: File;
+    insuranceCertificate?: File;
+    dbsCheckCertificate?: File;
+  }): Promise<ApiResponse<User>> {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    return apiService.post('/therapist/signup', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  async updateTherapist(data: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    title: string;
+    specialization: string;
+    therapyField: string;
+    gender: string;
+    country: string;
+    city: string;
+    postalCode: string;
+    address: string;
+    experience: string;
+    consultationFee: string;
+    profileImg?: File;
+    highestDegree?: File;
+    insuranceCertificate?: File;
+    dbsCheckCertificate?: File;
+  }): Promise<ApiResponse<User>> {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    return apiService.put('/therapist/update', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  // User Management - Patients
   async searchPatients(query: string): Promise<ApiResponse<User[]>> {
     return apiService.get(`/admin/search-patient/${encodeURIComponent(query)}`);
   }
@@ -202,14 +296,37 @@ export class AdminApiService {
     return apiService.get(`/patient/get/${id}`);
   }
 
-  async getTherapistById(id: string): Promise<ApiResponse<User>> {
-    // Since there's no direct get therapist by ID endpoint, we'll use search
-    // This is a workaround - ideally there should be a /therapist/get/{id} endpoint
-    return apiService.get(`/admin/search-therapist/${id}`);
-  }
-
   async getNewRegisteredPatients(): Promise<ApiResponse<User[]>> {
     return apiService.get('/patient/new-registered');
+  }
+
+  async createPatient(data: {
+    fullName: string;
+    email: string;
+    password: string;
+    phone: string;
+    gender: string;
+    country: string;
+    city: string;
+    postalCode: string;
+    address: string;
+    active: string;
+    profilePicture?: File;
+  }): Promise<ApiResponse<User>> {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    return apiService.post('/patient/signup', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 
   async updatePatient(data: {
@@ -247,7 +364,7 @@ export class AdminApiService {
     therapistId: string;
     verified: boolean;
   }): Promise<ApiResponse<{ message: string }>> {
-    return apiService.put('/admin/therapist/verify', data);
+    return apiService.put(`/admin/verify-therapist/${data.therapistId}`, data);
   }
 
   async suspendUser(data: {
@@ -256,7 +373,7 @@ export class AdminApiService {
     suspended: boolean;
     reason?: string;
   }): Promise<ApiResponse<{ message: string }>> {
-    return apiService.put('/admin/user/suspend', data);
+    return apiService.put(`/admin/suspend-user/${data.userId}`, data);
   }
 
   async resetUserPassword(data: {
@@ -286,6 +403,7 @@ export class AdminApiService {
     country?: string;
     gender?: string;
     active?: string;
+    userType?: 'therapist' | 'patient';
   }): Promise<ApiResponse<{ message: string }>> {
     // Create FormData for multipart/form-data request
     const formData = new FormData();
@@ -298,7 +416,10 @@ export class AdminApiService {
     if (data.gender) formData.append('gender', data.gender);
     if (data.active) formData.append('active', data.active);
 
-    return apiService.put('/patient/update', formData, {
+    // Use appropriate endpoint based on user type
+    const endpoint = data.userType === 'therapist' ? '/therapist/update' : '/patient/update';
+    
+    return apiService.put(endpoint, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

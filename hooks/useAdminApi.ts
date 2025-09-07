@@ -216,6 +216,19 @@ export const useAllPatients = () => {
   });
 };
 
+export const useAllTherapists = () => {
+  return useQuery({
+    queryKey: queryKeys.therapists(),
+    queryFn: async () => {
+      const response = await adminApiService.getAllTherapists();
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Failed to fetch all therapists');
+      }
+      return response.data;
+    },
+  });
+};
+
 export const usePatientById = (id: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: queryKeys.patientById(id),
