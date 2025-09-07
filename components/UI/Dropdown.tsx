@@ -27,7 +27,7 @@ const Dropdown: React.FC<DropdownProps> = ({ id, value, options, onChange, class
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsOpen(true)}
         onBlur={() => setIsOpen(false)}
-        className="w-full px-3 py-2 pr-9 border border-gray-300 rounded-md shadow-sm focus:outline-none appearance-none bg-white text-sm"
+        className="w-full px-3 py-2 pr-9 border border-gray-300 rounded-md shadow-sm focus:outline-none appearance-none bg-white text-sm text-gray-900"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>

@@ -208,7 +208,7 @@ const CreateAdminForm: React.FC<CreateAdminFormProps> = ({ onSuccess, onCancel }
             <select
               value={formData.timezone}
               onChange={(e) => handleInputChange('timezone', e.target.value)}
-              className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3C5671] focus:border-transparent"
+              className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3C5671] focus:border-transparent text-gray-900 bg-white"
             >
               <option value="UTC-5">UTC-5 (EST)</option>
               <option value="UTC-6">UTC-6 (CST)</option>

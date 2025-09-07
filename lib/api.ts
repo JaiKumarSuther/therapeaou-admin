@@ -104,9 +104,31 @@ class ApiService {
         fullError: error
       });
 
+      // Handle specific error cases
+      let errorMessage = 'An error occurred';
+      
+      if (axiosError.response?.status === 401) {
+        errorMessage = 'Invalid email or password';
+      } else if (axiosError.response?.status === 404) {
+        // Check if it's a login endpoint
+        if (axiosError.config?.url?.includes('/admin/login')) {
+          errorMessage = 'Invalid email or password';
+        } else {
+          errorMessage = 'Resource not found';
+        }
+      } else if (axiosError.response?.status === 403) {
+        errorMessage = 'Access denied';
+      } else if (axiosError.response?.status && axiosError.response.status >= 500) {
+        errorMessage = 'Server error. Please try again later';
+      } else if (axiosError.response?.data?.message) {
+        errorMessage = axiosError.response.data.message;
+      } else if (axiosError.message) {
+        errorMessage = axiosError.message;
+      }
+
       return {
         success: false,
-        error: axiosError.response?.data?.message || axiosError.message || 'An error occurred',
+        error: errorMessage,
       };
     }
   }

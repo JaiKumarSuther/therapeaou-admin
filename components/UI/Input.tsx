@@ -40,7 +40,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    const baseClasses = 'block w-full px-3 py-2.5 border rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed bg-white';
+    const baseClasses = 'block w-full px-3 py-2.5 border rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-900 placeholder-gray-500';
     
     const stateClasses = error
       ? 'border-red-300 focus:ring-red-500 focus:border-red-500'

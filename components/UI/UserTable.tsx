@@ -507,7 +507,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 id="edit-gender"
                 value={(editForm.gender as string) || ''}
                 onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color] text-gray-900 bg-white"
                 style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               >
                 <option value="">Select Gender</option>
@@ -565,7 +565,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 id="edit-status"
                 value={editForm.status}
                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'Active' | 'Restricted' | 'Pending Verification' })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color]"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[--ring-color] focus:border-[--ring-color] text-gray-900 bg-white"
                 style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
               >
                 <option value="Active">Active</option>
@@ -640,7 +640,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction }) => {
                 value={messageBody}
                 onChange={(e) => setMessageBody(e.target.value)}
                 rows={6}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none text-gray-900 placeholder-gray-500"
                 placeholder="Write your message..."
               />
             </div>

@@ -75,7 +75,7 @@ export default function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
             id="reset-email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[--ring-color] focus:border-[--ring-color]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[--ring-color] focus:border-[--ring-color] text-gray-900 placeholder-gray-500"
             style={{ '--ring-color': COLORS.PRIMARY.BLUE } as React.CSSProperties}
             placeholder="Enter your email address"
             required

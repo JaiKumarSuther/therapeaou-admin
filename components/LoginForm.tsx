@@ -28,6 +28,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp, onCre
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
+  const [generalError, setGeneralError] = useState<string>('');
 
   const validateForm = (): boolean => {
     const newErrors: Partial<LoginFormData> = {};
@@ -50,9 +51,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp, onCre
 
   const handleInputChange = (field: keyof LoginFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
+    // Clear errors when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+    if (generalError) {
+      setGeneralError('');
     }
   };
 
@@ -70,11 +74,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp, onCre
       if (result.success) {
         router.push('/dashboard');
       } else {
-        setErrors({ email: result.error || 'Login failed. Please check your credentials.' });
+        setGeneralError(result.error || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ email: 'Network error. Please check your connection and try again.' });
+      setGeneralError('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +100,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSignUp, onCre
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        {generalError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3">
+            <p className="text-sm text-red-600">{generalError}</p>
+          </div>
+        )}
         <Input
           type="email"
           label="Email"
